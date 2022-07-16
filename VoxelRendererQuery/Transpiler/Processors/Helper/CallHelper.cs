@@ -21,17 +21,28 @@ namespace VoxelRendererQuery.Transpiler.Processors.Helper
             return _CALL_HELPER;
         }
 
-        public IEnumerator<Argument> GetArguments(IEnumerator<NHLSLToken> tokenStream)
+        public enum AssignmentType
+        {
+            INSTANCIATION,
+            REASSIGNING,
+            NOTHING
+        }
+
+        public IEnumerator<Argument> GetAssignmentSpecs(IEnumerator<NHLSLToken> tokenStream, AssignmentType[] assignmentType)
         {
             if (tokenStream.Current.Raw.Equals("="))
             {
+                assignmentType[0] = AssignmentType.INSTANCIATION;
+
                 tokenStream.MoveNext();
                 if (tokenStream.Current.Identifier == NHLSLTokenizer.Token.OOP_KEYWORD_NEW)
                 {
+                    assignmentType[0] = AssignmentType.INSTANCIATION;
+
                     tokenStream.MoveNext();
                     NHLSLToken _instanceType = tokenStream.Current;
-                    tokenStream.MoveNext();
-                    tokenStream.MoveNext();
+                    tokenStream.MoveNext(); // class type
+                    tokenStream.MoveNext(); // (
 
                     // TODO: CONSTRUCTOR
                     if (tokenStream.Current.Identifier != NHLSLTokenizer.Token.BRACE_C)
@@ -81,7 +92,14 @@ namespace VoxelRendererQuery.Transpiler.Processors.Helper
 
                     }
                 }
+                else
+                {
+                    assignmentType[0] = AssignmentType.REASSIGNING;
+                }
 
+            }else if(tokenStream.Current.Identifier == NHLSLTokenizer.Token.SEMICOLON)
+            {
+                assignmentType[0] = AssignmentType.NOTHING;
             }
         }
     }

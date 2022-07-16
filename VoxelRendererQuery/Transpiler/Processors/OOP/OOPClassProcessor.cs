@@ -305,9 +305,32 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
             return _srcBuilder.ToString();
         }
 
-        public void VerifyConstructorArguments(IEnumerator<NHLSLToken> arguments)
+        public void ProcessArgumentStream(IEnumerator<Argument> arguments)
         {
+            int _argc = 1;
+            while (arguments.MoveNext())
+            {
+                Argument _current = arguments.Current;
+                // process tokens
+                _processTokens(_current.Tokens.GetEnumerator());
+                _argc++;
+            }
 
+
+        }
+
+        private List<NHLSLToken> _processTokens(IEnumerator<NHLSLToken> tokenStream)
+        {
+            Stack<NHLSLToken> _tokenStack = new Stack<NHLSLToken>();
+            while (tokenStream.MoveNext())
+            {
+                NHLSLToken _current = tokenStream.Current;
+
+                _tokenStack.Push(_current);
+            }
+
+
+            return null;
         }
     }
 }

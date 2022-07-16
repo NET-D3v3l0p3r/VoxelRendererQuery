@@ -25,13 +25,13 @@ namespace VoxelRendererQuery.Transpiler.Processors
         public List<IComponent> Components { get; set; }
         public List<Intrinsics> IntrinsicCalls { get; }
 
+        public ParametersProcessor MethodParameters { get; private set; }
+
 
         private IntrinsicsHelper _intrinsicsHelper;
 
 
         // PROCESSORS
-
-        private ParametersProcessor _parametersProcessor;
         private List<InstanceProcessor> _instanceProcessors = new List<InstanceProcessor>();
 
         public MethodProcessor(IProcessor caller, IEnumerator<NHLSLToken> tokenStream)
@@ -51,10 +51,10 @@ namespace VoxelRendererQuery.Transpiler.Processors
 
         public void Run()
         {
-            _parametersProcessor = new ParametersProcessor(this.TokenStream);
-            _parametersProcessor.Run();
+            MethodParameters = new ParametersProcessor(this.TokenStream);
+            MethodParameters.Run();
 
-            this.Components.Add(_parametersProcessor);
+            this.Components.Add(MethodParameters);
 
             int _bracketCounter = 0;
 

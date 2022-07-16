@@ -8,6 +8,7 @@ using VoxelRendererQuery.Includes.InternalStructs;
 using VoxelRendererQuery.Transpiler.Processors.Helper;
 using VoxelRendererQuery.Transpiler.Processors.OOP;
 using VoxelRendererQuery.Transpiler.Tokenizer;
+using static VoxelRendererQuery.Transpiler.Processors.Helper.CallHelper;
 
 namespace VoxelRendererQuery.Transpiler.Processors.OOP
 {
@@ -29,7 +30,8 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
             this.TokenStream.MoveNext();
 
             NHLSLToken _typeName = this.TokenStream.Current;
-            OOPHandler.Default().CreatePseudoHeap(OOPHandler.Default().Classes[_typeName.Raw]);
+            OOPClassProcessor _class = OOPHandler.Default().Classes[_typeName.Raw];
+            OOPHandler.Default().CreatePseudoHeap(_class);
             this.TokenStream.MoveNext();
 
             NHLSLToken _variableName = this.TokenStream.Current;
@@ -44,13 +46,23 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
 
             InstanceVariables.Add(_field);
 
-            var argumentStream = CallHelper.Default().GetArguments(this.TokenStream);
-            while (argumentStream.MoveNext())
+            AssignmentType[] _assignmentType = new AssignmentType[1]; // dirty, but works.
+
+            var _argumentStream = CallHelper.Default().GetAssignmentSpecs(this.TokenStream, _assignmentType);
+
+
+            switch (_assignmentType[0])
             {
-                var arg = argumentStream.Current;
+                case AssignmentType.INSTANCIATION:
+                    //while (argumentStream.MoveNext())
+                    //{
+                    //    var arg = argumentStream.Current;
+                    //}
 
-
+                    _class.ProcessArgumentStream(_argumentStream);
+                    break;
             }
+            
 
 
 
