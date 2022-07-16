@@ -1,0 +1,343 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="raytracer" xml:space="preserve">
+    <value>uniform int volumeInitialSize;
+
+uniform RWTexture2D&lt;float4&gt; backBuffer;
+
+
+globallycoherent RWTexture3D&lt;int&gt; voxelDataBuffer;
+int getData(int3 position)
+{
+    return voxelDataBuffer[position];
+}
+
+
+struct Ray
+{
+    float3 origin;
+    float3 dir;
+    float3 dirRcp;
+    
+};
+
+struct AABB
+{
+    float3 center;
+    float3 maxSize;
+};
+AABB createAABB(float3 center, float3 max)
+{
+    AABB aabb = (AABB) 0;
+    aabb.center = center;
+    aabb.maxSize = max;
+    return aabb;
+}
+
+bool checkHit(in Ray ray, in AABB aabb,
+                     in float3 sign,
+                     in float3 minSubtrahend, in float3 maxSubtrahend,
+                     out float lambdaMin, out float lambdaMax,
+                     out float3 sideMin, out float3 sideMax)
+{
+    float3 leftSide = aabb.center + minSubtrahend;
+    float3 rigthSide = aabb.center + maxSubtrahend;
+    
+    float3 leftSideTimesReciprocal = (leftSide - ray.origin) * ray.dirRcp;
+    float3 rightSideTimesReciprocal = (rigthSide - ray.origin) * ray.dirRcp;
+    
+    lambdaMin = max(leftSideTimesReciprocal.x, max(leftSideTimesReciprocal.y, leftSideTimesReciprocal.z));
+    lambdaMax = min(rightSideTimesReciprocal.x, min(rightSideTimesReciprocal.y, rightSideTimesReciprocal.z));
+    
+    sideMin = (leftSideTimesReciprocal == lambdaMin) * sign;
+    sideMax = (rightSideTimesReciprocal == lambdaMax) * sign;
+    
+    return lambdaMax &gt; lambdaMin;
+}
+bool checkHit(in Ray ray, in AABB aabb,
+                     in float3 minSubtrahend, in float3 maxSubtrahend,
+                     out float tMin, out float tMax)
+{
+    float3 leftSide = aabb.center + minSubtrahend;
+    float3 rigthSide = aabb.center + maxSubtrahend;
+    
+    float3 leftSideTimesReciprocal = (leftSide - ray.origin) * ray.dirRcp;
+    float3 rightSideTimesReciprocal = (rigthSide - ray.origin) * ray.dirRcp;
+    
+    tMin = max(leftSideTimesReciprocal.x, max(leftSideTimesReciprocal.y, leftSideTimesReciprocal.z));
+    tMax = min(rightSideTimesReciprocal.x, min(rightSideTimesReciprocal.y, rightSideTimesReciprocal.z));
+    
+    return tMax &gt; tMin * (tMin + tMax &gt;= 0);
+}
+bool isInsideVolume(float3 position, AABB aabb)
+{
+    float3 min1 = aabb.center;
+    float3 max1 = aabb.center + aabb.maxSize;
+    return
+            (position.x &gt;= min1.x) &amp; (position.y &gt;= min1.y) &amp; (position.z &gt;= min1.z) &amp;
+            (position.x &lt;= max1.x) &amp; (position.y &lt;= max1.y) &amp; (position.z &lt;= max1.z);
+}
+
+
+
+bool arrayRayHit(in Ray ray,
+                 in AABB volume,
+                 out float depth,
+                 out float3 hitPointF32,
+                 out float3 hitPointI32,
+                 out float3 normal,
+                 out int voxelData,
+                 out AABB voxelAABB, out AABB voxelAABBLast,
+                 out int iterations)
+{
+    
+    volume.center = max(volume.center - 1, 0);
+    volume.maxSize = min(volume.maxSize + 2, volumeInitialSize);
+    
+    AABB arrayCube = volume;
+    
+    float lambdaMin = 0;
+    float lambdaMax = 0;
+    
+    float3 sideMin = (float3) 0;
+    float3 sideMax = (float3) 0;
+    
+    float3 biggerThanZero = ray.dirRcp &gt; 0;
+    float3 lessThanZero = 1.0f - biggerThanZero;
+    
+    float3 sgnsPerComps = biggerThanZero - lessThanZero; // alternative: sign(ray.dir);
+    
+    float3 minCorner = lessThanZero * arrayCube.maxSize;
+    float3 maxCorner = biggerThanZero * arrayCube.maxSize;
+    bool initialHitStatus = checkHit(ray, arrayCube, sgnsPerComps, minCorner, maxCorner, lambdaMin, lambdaMax, sideMin, sideMax);
+    if (((lambdaMin &lt; 0) &amp; (lambdaMax &lt; 0)) | !initialHitStatus)
+        return false;
+        
+    float maximumDepth = lambdaMax;
+    
+        
+    bool isOriginInside = !isInsideVolume(ray.origin, arrayCube);
+    
+    float3 floatPosition3 = ray.origin + lambdaMin * ray.dir * isOriginInside;
+    float3 intPosition3 = floor(floatPosition3);
+        
+    float3 offset = saturate(intPosition3 - floor(floatPosition3 + 0.01f));
+    intPosition3 -= offset;
+        
+    float3 pstvDirComps = saturate(sgnsPerComps);
+    float3 ngtvDirComps = 1 - pstvDirComps;
+    
+    AABB lastVoxel = createAABB(intPosition3, float3(1, 1, 1));
+    AABB nextVoxel = createAABB(intPosition3, float3(1, 1, 1));
+        
+    minCorner = lessThanZero * nextVoxel.maxSize;
+    maxCorner = biggerThanZero * nextVoxel.maxSize;
+    
+    int currentData = 0;
+    [loop]
+    while (checkHit(ray, nextVoxel, sgnsPerComps, minCorner, maxCorner, lambdaMin, lambdaMax, sideMin, sideMax)
+                      &amp; (currentData == 0)
+                      &amp; (maximumDepth - lambdaMin &gt;= 1))
+    {
+        
+        lastVoxel.center = intPosition3;
+        
+        floatPosition3 = ray.origin + lambdaMax * ray.dir;
+        intPosition3 = floor(floatPosition3);
+         
+        float3 rightRnddComps = (intPosition3 - floor(floatPosition3 + 0.01f)) + 1.0f; // is equivalent to: &gt;= 0
+        float3 wrongRnddComps = 1 - rightRnddComps;
+
+        offset = sideMax * ((pstvDirComps * wrongRnddComps) + (ngtvDirComps * rightRnddComps));
+        intPosition3 += offset;
+            
+        normal = -sideMax;
+
+        currentData = getData(intPosition3);
+        nextVoxel.center = intPosition3;
+            
+        depth = lambdaMax;
+        iterations++;
+
+    }
+    
+    
+    voxelData = currentData;
+    hitPointF32 = floatPosition3;
+    hitPointI32 = intPosition3;
+    
+    voxelAABB = nextVoxel;
+    voxelAABBLast = lastVoxel;
+    
+    return voxelData &gt; 0;
+}
+
+
+
+
+
+$$$__ROUTINE__$$$
+
+
+[numthreads(8, 8, 1)]
+void RC(uint3 localID : SV_GroupThreadID, uint3 groupID : SV_GroupID,
+                    uint localIndex : SV_GroupIndex, uint3 globalID : SV_DispatchThreadID)
+{
+    Ray ray = $$$RAY_GEN$$$(globalID.xy);		
+    backBuffer[globalID.xy] = $$$VOXEL_SHADER$$$(ray, $$$ENTRY$$$(ray));
+}
+
+
+technique VolumeModificationTechnique
+{
+    pass GenerateOctree
+    {
+        ComputeShader = compile cs_5_0 RC();
+    }
+}</value>
+  </data>
+  <data name="volumeRayTest" xml:space="preserve">
+    <value>$$$RTRCRESULT$$$ $$$VOLUME_RAYTEST$$$(Ray ray)
+{
+    float depth = 0;
+    float3 hitPoint = (float3) 0;
+    float3 hitPointInt = (float3) 0;
+    float3 normal = (float3) 0;
+    AABB voxelAABB = (AABB) 0;
+    AABB voxelAABBLast = (AABB) 0;
+    int voxelData = 0;
+    int iterations = 0;
+                        
+    bool result = arrayRayHit(
+                        ray,
+                        createAABB(float3(0, 0, 0), float3(volumeInitialSize, volumeInitialSize, volumeInitialSize)),
+                        depth,
+                        hitPoint,
+                        hitPointInt,
+                        normal,
+                        voxelData,
+                        voxelAABB, voxelAABBLast, iterations);
+        
+
+$$$ASSIGNMENT_ROUTINE$$$
+    
+}</value>
+  </data>
+</root>
