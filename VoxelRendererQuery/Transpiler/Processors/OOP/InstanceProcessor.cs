@@ -46,21 +46,16 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
 
             InstanceVariables.Add(_field);
 
-            AssignmentType[] _assignmentType = new AssignmentType[1]; // dirty, but works.
-
-            var _argumentStream = CallHelper.Default().GetAssignmentSpecs(this.TokenStream, _assignmentType);
-
-
-            switch (_assignmentType[0])
+            var _argumentStream = CallHelper.Default().GetAssignmentSpecs(this.TokenStream, out AssignmentType _assignmentType);
+            switch (_assignmentType)
             {
                 case AssignmentType.INSTANCIATION:
-                    //while (argumentStream.MoveNext())
-                    //{
-                    //    var arg = argumentStream.Current;
-                    //}
-
                     _class.ProcessArgumentStream(_argumentStream);
                     break;
+
+
+                case AssignmentType.ERROR:
+                    throw new Exception("Error handling current token: token lost");
             }
             
 

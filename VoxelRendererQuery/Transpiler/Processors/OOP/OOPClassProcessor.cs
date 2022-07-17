@@ -305,17 +305,10 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
             return _srcBuilder.ToString();
         }
 
-        public void ProcessArgumentStream(IEnumerator<Argument> arguments)
+        public void ProcessArgumentStream(List<Argument> arguments)
         {
-            int _argc = 1;
-            while (arguments.MoveNext())
-            {
-                Argument _current = arguments.Current;
-                // process tokens
-                _processTokens(_current.Tokens.GetEnumerator());
-                _argc++;
-            }
-
+            int _argc = arguments.Count;
+            List<MethodProcessor> _ctors = Constructors.FindAll(p => p.MethodParameters.Parameters.Count == _argc);
 
         }
 

@@ -25,19 +25,22 @@ namespace VoxelRendererQuery.Transpiler.Processors.Helper
         {
             INSTANCIATION,
             REASSIGNING,
-            NOTHING
+            NOTHING,
+            ERROR
         }
 
-        public IEnumerator<Argument> GetAssignmentSpecs(IEnumerator<NHLSLToken> tokenStream, AssignmentType[] assignmentType)
+        public List<Argument> GetAssignmentSpecs(IEnumerator<NHLSLToken> tokenStream, out AssignmentType assignmentType)
         {
+            assignmentType = AssignmentType.ERROR;
+            List<Argument> _args = new List<Argument>();
             if (tokenStream.Current.Raw.Equals("="))
             {
-                assignmentType[0] = AssignmentType.INSTANCIATION;
+                assignmentType = AssignmentType.INSTANCIATION;
 
                 tokenStream.MoveNext();
                 if (tokenStream.Current.Identifier == NHLSLTokenizer.Token.OOP_KEYWORD_NEW)
                 {
-                    assignmentType[0] = AssignmentType.INSTANCIATION;
+                    assignmentType = AssignmentType.INSTANCIATION;
 
                     tokenStream.MoveNext();
                     NHLSLToken _instanceType = tokenStream.Current;
@@ -63,7 +66,7 @@ namespace VoxelRendererQuery.Transpiler.Processors.Helper
                             {
                                 if (_braceCounter == 1)
                                 {
-                                    yield return _currentArgument;
+                                    _args.Add(_currentArgument);
                                     _currentArgument = new Argument();
                                     _currentArgument.Tokens = new List<NHLSLToken>();
                                 }
@@ -88,19 +91,21 @@ namespace VoxelRendererQuery.Transpiler.Processors.Helper
                                 break;
                         }
 
-                        yield return _currentArgument;
+                        _args.Add(_currentArgument);
 
                     }
                 }
                 else
                 {
-                    assignmentType[0] = AssignmentType.REASSIGNING;
+                    assignmentType = AssignmentType.REASSIGNING;
                 }
 
             }else if(tokenStream.Current.Identifier == NHLSLTokenizer.Token.SEMICOLON)
             {
-                assignmentType[0] = AssignmentType.NOTHING;
+                assignmentType = AssignmentType.NOTHING;
             }
+
+            return _args;
         }
     }
 }
