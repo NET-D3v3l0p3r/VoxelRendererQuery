@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using VoxelRendererQuery.Includes;
 using VoxelRendererQuery.Includes.Errors;
 using VoxelRendererQuery.Includes.InternalStructs;
+using VoxelRendererQuery.Transpiler.Meta;
 using VoxelRendererQuery.Transpiler.Processors.Helper;
 using VoxelRendererQuery.Transpiler.Processors.OOP;
 using VoxelRendererQuery.Transpiler.Tokenizer;
@@ -14,7 +15,7 @@ namespace VoxelRendererQuery.Transpiler.Processors
 {
     internal class MethodProcessor : IComponent, IProcessor
     {
-        public IProcessor Caller { get; private set; }
+        public IMethodContainer Caller { get; private set; }
         public string Name { get; set; }
         public List<NHLSLToken> Type { get; set; }
 
@@ -34,7 +35,7 @@ namespace VoxelRendererQuery.Transpiler.Processors
         // PROCESSORS
         private List<InstanceProcessor> _instanceProcessors = new List<InstanceProcessor>();
 
-        public MethodProcessor(IProcessor caller, IEnumerator<NHLSLToken> tokenStream)
+        public MethodProcessor(IMethodContainer caller, IEnumerator<NHLSLToken> tokenStream)
         {
             this.Caller = caller;
             this.TokenStream = tokenStream;
@@ -79,7 +80,7 @@ namespace VoxelRendererQuery.Transpiler.Processors
 
                 if(token.Identifier == NHLSLTokenizer.Token.OOP_POINTER)
                 {
-                    InstanceProcessor _instanceProcessor = new InstanceProcessor(this.TokenStream);
+                    InstanceProcessor _instanceProcessor = new InstanceProcessor(this.Caller, this.TokenStream);
                     _instanceProcessor.Run();
 
                     this.Components.Add(_instanceProcessor);

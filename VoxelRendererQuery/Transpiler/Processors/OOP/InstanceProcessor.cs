@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VoxelRendererQuery.Includes;
 using VoxelRendererQuery.Includes.InternalStructs;
+using VoxelRendererQuery.Transpiler.Meta;
 using VoxelRendererQuery.Transpiler.Processors.Helper;
 using VoxelRendererQuery.Transpiler.Processors.OOP;
 using VoxelRendererQuery.Transpiler.Tokenizer;
@@ -18,8 +19,11 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
         public List<IComponent> Components { get; set; }
         public List<Field> InstanceVariables { get; private set; }
 
-        public InstanceProcessor(IEnumerator<NHLSLToken> tokenStream)
+        private IMethodContainer _caller;
+
+        public InstanceProcessor(IMethodContainer caller, IEnumerator<NHLSLToken> tokenStream)
         {
+            this._caller = caller;
             this.TokenStream = tokenStream;
             this.Components = new List<IComponent>();
             this.InstanceVariables = new List<Field>();
@@ -46,7 +50,7 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
 
             InstanceVariables.Add(_field);
 
-            var _argumentStream = CallHelper.Default().GetAssignmentSpecs(this.TokenStream, out AssignmentType _assignmentType);
+            var _argumentStream = CallHelper.Default().GetAssignmentSpecs(_caller, this.TokenStream, out OOPClassProcessor _instanceType, out AssignmentType _assignmentType);
             switch (_assignmentType)
             {
                 case AssignmentType.INSTANCIATION:

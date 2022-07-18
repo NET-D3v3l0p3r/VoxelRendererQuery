@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VoxelRendererQuery.Includes.InternalStructs;
+using VoxelRendererQuery.Transpiler.Meta;
 using VoxelRendererQuery.Transpiler.Processors.OOP;
 using VoxelRendererQuery.Transpiler.Tokenizer;
 
@@ -29,10 +30,12 @@ namespace VoxelRendererQuery.Transpiler.Processors.Helper
             ERROR
         }
 
-        public List<Argument> GetAssignmentSpecs(IEnumerator<NHLSLToken> tokenStream, out AssignmentType assignmentType)
+        public List<ArgumentProcessor> GetAssignmentSpecs(IMethodContainer caller, IEnumerator<NHLSLToken> tokenStream, out OOPClassProcessor instanceType, out AssignmentType assignmentType)
         {
+            instanceType = null;
             assignmentType = AssignmentType.ERROR;
-            List<Argument> _args = new List<Argument>();
+            List<ArgumentProcessor> _args = new List<ArgumentProcessor>();
+         
             if (tokenStream.Current.Raw.Equals("="))
             {
                 assignmentType = AssignmentType.INSTANCIATION;
@@ -44,6 +47,7 @@ namespace VoxelRendererQuery.Transpiler.Processors.Helper
 
                     tokenStream.MoveNext();
                     NHLSLToken _instanceType = tokenStream.Current;
+                    instanceType = OOPHandler.Default().Classes[_instanceType.Raw];
                     tokenStream.MoveNext(); // class type
                     tokenStream.MoveNext(); // (
 
@@ -52,9 +56,10 @@ namespace VoxelRendererQuery.Transpiler.Processors.Helper
                     {
                         OOPClassProcessor _class = OOPHandler.Default().Classes[_instanceType.Raw];
 
-                        Argument _currentArgument = new Argument();
-                        _currentArgument.Tokens = new List<NHLSLToken>();
-                        _currentArgument.Tokens.Add(tokenStream.Current);
+                        List<NHLSLToken> _currentArgumentTokens = new List<NHLSLToken>();
+                        _currentArgumentTokens.Add(tokenStream.Current);
+
+                        ArgumentProcessor _argumentProcessor = null;
 
                         int _braceCounter = 1;
 
@@ -66,32 +71,36 @@ namespace VoxelRendererQuery.Transpiler.Processors.Helper
                             {
                                 if (_braceCounter == 1)
                                 {
-                                    _args.Add(_currentArgument);
-                                    _currentArgument = new Argument();
-                                    _currentArgument.Tokens = new List<NHLSLToken>();
+                                    _argumentProcessor = new ArgumentProcessor(caller, _currentArgumentTokens.GetEnumerator());
+                                    _argumentProcessor.Run();
+                                    _args.Add(_argumentProcessor);
+
+                                    _currentArgumentTokens.Clear();
                                 }
-                                else _currentArgument.Tokens.Add(_token);
+                                else _currentArgumentTokens.Add(_token);
                             }
                             else if (_token.Identifier == NHLSLTokenizer.Token.BRACE_O)
                             {
                                 _braceCounter++;
-                                _currentArgument.Tokens.Add(_token);
+                                _currentArgumentTokens.Add(_token);
                             }
                             else if (_token.Identifier == NHLSLTokenizer.Token.BRACE_C)
                             {
                                 _braceCounter--;
                                 if (_braceCounter > 0)
-                                    _currentArgument.Tokens.Add(_token);
+                                    _currentArgumentTokens.Add(_token);
                             }
                             else
                             {
-                                _currentArgument.Tokens.Add(_token);
+                                _currentArgumentTokens.Add(_token);
                             }
                             if (_braceCounter == 0)
                                 break;
                         }
 
-                        _args.Add(_currentArgument);
+                        _argumentProcessor = new ArgumentProcessor(caller, _currentArgumentTokens.GetEnumerator());
+                        _argumentProcessor.Run();
+                        _args.Add(_argumentProcessor);
 
                     }
                 }
@@ -104,6 +113,7 @@ namespace VoxelRendererQuery.Transpiler.Processors.Helper
             {
                 assignmentType = AssignmentType.NOTHING;
             }
+
 
             return _args;
         }

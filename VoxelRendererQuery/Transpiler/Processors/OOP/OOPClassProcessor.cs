@@ -5,11 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using VoxelRendererQuery.Includes;
 using VoxelRendererQuery.Includes.InternalStructs;
+using VoxelRendererQuery.Transpiler.Meta;
 using VoxelRendererQuery.Transpiler.Tokenizer;
 
 namespace VoxelRendererQuery.Transpiler.Processors.OOP
 {
-    internal partial class OOPClassProcessor : IComponent, IProcessor
+    internal partial class OOPClassProcessor : IComponent, IProcessor, IMethodContainer
     {
 
         public string Name { get; private set; }
@@ -22,7 +23,7 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
 
         public List<Field> Fields { get; private set; }
         public List<MethodProcessor> Constructors { get; private set; }
-        public List<MethodProcessor> Methods { get; private set; }
+        public List<MethodProcessor> Methods { get; set; }
 
         public OOPClassProcessor(IEnumerator<NHLSLToken> tokenStream)
         {
@@ -139,7 +140,19 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
                     this.Components.Add(this.TokenStream.Current);
 
                     foreach (var _copyC in _copyList)
+                    {
                         this.Components.Add(_copyC);
+
+                        if(_copyC is MethodProcessor)
+                        {
+                            var _method = (MethodProcessor)_copyC;
+                            if (_method.IsConstructor)
+                                Constructors.Add(_method);
+                            else
+                                Methods.Add(_method);
+                        }
+
+                    }
 
                     continue;
                 }
@@ -174,7 +187,8 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
                     while (
                         _tokenStack.Count > 0 &&
                         _tokenStack.Peek().Identifier != NHLSLTokenizer.Token.SEMICOLON &&
-                        _tokenStack.Peek().Identifier != NHLSLTokenizer.Token.BRACKET_C)
+                        _tokenStack.Peek().Identifier != NHLSLTokenizer.Token.BRACKET_C &&
+                        _tokenStack.Peek().Identifier != NHLSLTokenizer.Token.BRACKET_O)
                     {
 
                         NHLSLToken cur = _tokenStack.Pop();
@@ -206,6 +220,7 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
                         Components.Add(methodProcessor);
                     else
                     {
+                        Methods.Remove(Methods.First(p => p.Name.Equals(methodProcessor.Name)));
                         int _indexOld = this.Components.FindIndex(p => p is MethodProcessor && ((MethodProcessor)p).Name.Equals(methodProcessor.Name));
                         Components[_indexOld] = methodProcessor;
                     }
@@ -305,10 +320,13 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
             return _srcBuilder.ToString();
         }
 
-        public void ProcessArgumentStream(List<Argument> arguments)
+        public void ProcessArgumentStream(List<ArgumentProcessor> arguments)
         {
             int _argc = arguments.Count;
             List<MethodProcessor> _ctors = Constructors.FindAll(p => p.MethodParameters.Parameters.Count == _argc);
+
+ 
+            
 
         }
 

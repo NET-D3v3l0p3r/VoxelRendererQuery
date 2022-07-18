@@ -18,6 +18,12 @@ namespace VoxelRendererQuery.Test
         {
             AllocConsole();
 
+
+            var ss = "191.1";
+            bool _rslt = float.TryParse(ss, out _);
+            Console.WriteLine(_rslt);
+
+
             var stream = NHLSLTokenizer.Default().Run(File.ReadAllText(@"example.nhlsl"));
 
             NHLSLTranspiler transpiler = new NHLSLTranspiler(stream.GetEnumerator());

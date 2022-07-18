@@ -5,17 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 using VoxelRendererQuery.Includes;
 using VoxelRendererQuery.Includes.Errors;
+using VoxelRendererQuery.Transpiler.Meta;
 using VoxelRendererQuery.Transpiler.Processors;
 using VoxelRendererQuery.Transpiler.Processors.OOP;
 using VoxelRendererQuery.Transpiler.Tokenizer;
 
 namespace VoxelRendererQuery.Transpiler
 {
-    internal class NHLSLTranspiler : IComponent, IProcessor
+    internal class NHLSLTranspiler : IComponent, IProcessor, IMethodContainer
     {
         public string VoxelProgramName { get; private set; }
         public List<IComponent> Components { get; set; }
-        public List<MethodProcessor> Methods { get; private set; }
+        public List<MethodProcessor> Methods { get; set; }
+        public List<Field> Fields { get; set; }
 
         public IEnumerator<NHLSLToken> TokenStream { get; set; }
 
@@ -37,6 +39,7 @@ namespace VoxelRendererQuery.Transpiler
             this.TokenStream = tokenStream;
             this.Components = new List<IComponent>();
             this.Methods = new List<MethodProcessor>();
+            this.Fields = new List<Field>();
 
             _CURRENT = this; // VERY BAD DESIGN, BUT WORKS LOL
         }
@@ -49,6 +52,7 @@ namespace VoxelRendererQuery.Transpiler
             if (TokenStream.Current.Identifier != NHLSLTokenizer.Token.SRC_BEGIN)
                 throw new IllegalSourceException("The source file must start with: bismIllah");
 
+            bool _isPointer = false;
 
             while(TokenStream.MoveNext())
             {
@@ -63,6 +67,25 @@ namespace VoxelRendererQuery.Transpiler
                     StructProcessor structProcessor = new StructProcessor(TokenStream);
                     structProcessor.Run();
                     this.Components.Add(structProcessor);
+                }
+                else if (token.Identifier == NHLSLTokenizer.Token.OOP_POINTER)
+                {
+                    _isPointer = true;
+                }
+                else if (token.Identifier == NHLSLTokenizer.Token.SEMICOLON)
+                {
+
+                    Field field = new Field();
+
+                    field.IsPointer = _isPointer;
+                    field.Name = _tokenStack.Pop();
+                    field.Type = _tokenStack.Pop();
+
+                    Fields.Add(field);
+
+                    _isPointer = false;
+
+                    Components.Add(token);
                 }
                 else if(token.Identifier == NHLSLTokenizer.Token.OOP_CLASS)
                 {
@@ -93,6 +116,8 @@ namespace VoxelRendererQuery.Transpiler
                     this.Methods.Add(methodProcessor);
 
                     methodProcessor.Name = _temp.Pop().Raw;
+                    methodProcessor.IsPointerType = _isPointer;
+
                     methodProcessor.Run();
 
                     Components.Add(methodProcessor);
