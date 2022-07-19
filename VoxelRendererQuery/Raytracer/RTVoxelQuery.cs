@@ -39,16 +39,15 @@ namespace VoxelRendererQuery.Raytracer
         /// <summary>
         /// Default is version 3.8.1.2.
         /// </summary>
-        public string HLSLCompilerSource { get; set; }
-
+        public string HLSLCompilerPath { get; set; }
         /// <summary>
         /// RTvoXel-specific source code to transpile to hlsl.
         /// </summary>
-        public string RTvoXelSource { get; set; }
+        public string NHLSLSource { get; set; }
 
         public EffectParameterCollection Parameters { get { return _raytracer.Parameters; } }
 
-        public RTVoxelQuery(GraphicsDevice graphicsDevice, ContentManager content)
+        public RTVoxelQuery(GraphicsDevice graphicsDevice, ContentManager content, bool useAccelerator = false)
         {
             this.GraphicsDevice = graphicsDevice;
             this._structMapper = new HLSLStructMapper<T>();
@@ -66,7 +65,7 @@ namespace VoxelRendererQuery.Raytracer
                 ShaderAccess.ReadWrite);
 
 
-            this.HLSLCompilerSource = @"C:\Users\" + Environment.UserName + @"\.nuget\packages\monogame.content.builder.task.compute\3.8.1.2\tools\net5.0\any\mgfxc.exe";
+            this.HLSLCompilerPath = @"C:\Users\" + Environment.UserName + @"\.nuget\packages\monogame.content.builder.task.compute\3.8.1.2\tools\net5.0\any\mgfxc.exe";
 
         }
 
@@ -92,7 +91,7 @@ namespace VoxelRendererQuery.Raytracer
             var hlsl_conver = _structMapper.GenerateHLSLConverter();
 
             var final_src = new StringBuilder();
-            var tokens = NHLSLTokenizer.Default().Run(RTvoXelSource);
+            var tokens = NHLSLTokenizer.Default().Run(NHLSLSource);
 
             NHLSLTranspiler transpiler = new NHLSLTranspiler(tokens.GetEnumerator());
             transpiler.Run();
@@ -113,7 +112,7 @@ namespace VoxelRendererQuery.Raytracer
 
             Process compilerProcess = new Process();
             ProcessStartInfo processStartInfo = new ProcessStartInfo();
-            processStartInfo.FileName = HLSLCompilerSource;
+            processStartInfo.FileName = HLSLCompilerPath;
 
             File.WriteAllText(Path.GetTempPath() + "nsrtxshdr.dat", totalSource);
 
