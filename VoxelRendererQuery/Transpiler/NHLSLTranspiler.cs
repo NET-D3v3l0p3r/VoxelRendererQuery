@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using VoxelRendererQuery.Includes;
 using VoxelRendererQuery.Includes.Errors;
@@ -27,11 +29,12 @@ namespace VoxelRendererQuery.Transpiler
 
         private Dictionary<string, StructProcessor> _structProcessors = new Dictionary<string, StructProcessor>();
 
-        private static NHLSLTranspiler _CURRENT;
+        private static ConcurrentDictionary<Thread, NHLSLTranspiler> _CURRENT_INSTANCES 
+            = new ConcurrentDictionary<Thread, NHLSLTranspiler>();
 
         public static NHLSLTranspiler Current()
         {
-            return _CURRENT;
+            return _CURRENT_INSTANCES[Thread.CurrentThread];
         }
 
         public NHLSLTranspiler(IEnumerator<NHLSLToken> tokenStream)
@@ -41,7 +44,7 @@ namespace VoxelRendererQuery.Transpiler
             this.Methods = new List<MethodProcessor>();
             this.Fields = new List<Field>();
 
-            _CURRENT = this; // VERY BAD DESIGN, BUT WORKS LOL
+            _CURRENT_INSTANCES[Thread.CurrentThread] = this;
         }
 
         public void Run()
@@ -72,21 +75,23 @@ namespace VoxelRendererQuery.Transpiler
                 {
                     _isPointer = true;
                 }
-                else if (token.Identifier == NHLSLTokenizer.Token.SEMICOLON)
-                {
+                //else if (token.Identifier == NHLSLTokenizer.Token.SEMICOLON && Components[Components.Count - 1] is not IProcessor)
+                //{
 
-                    Field field = new Field();
+                //    Field field = new Field();
 
-                    field.IsPointer = _isPointer;
-                    field.Name = _tokenStack.Pop();
-                    field.Type = _tokenStack.Pop();
+                //    field.IsPointer = _isPointer;
+                //    field.Name = _tokenStack.Pop();
+                //    field.Type = _tokenStack.Pop();
+                //    if (_tokenStack.Count > 0)
+                //        field.Modifier = _tokenStack.Pop();
 
-                    Fields.Add(field);
+                //    Fields.Add(field);
 
-                    _isPointer = false;
+                //    _isPointer = false;
 
-                    Components.Add(token);
-                }
+                //    Components.Add(token);
+                //}
                 else if(token.Identifier == NHLSLTokenizer.Token.OOP_CLASS)
                 {
                     OOPClassProcessor classProcessor = new OOPClassProcessor(TokenStream);

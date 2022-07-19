@@ -85,14 +85,17 @@ namespace VoxelRendererQuery.Transpiler.Processors
 
             foreach (var param in Parameters)
             {
-                foreach (var type in param.Type)
-                {
-                    srcBuilder.Append(type.Raw + " ");
-                }
+                if (!param.IsPointer)
+                    srcBuilder.Append(param.Type[0].Raw + " ");
+                else
+                    srcBuilder.Append("int ");
+
+
                 srcBuilder.Append(param.Name.Raw + ",");
             }
 
-            srcBuilder.Remove(srcBuilder.Length - 1, 1);
+            if (Parameters.Count > 0)
+                srcBuilder.Remove(srcBuilder.Length - 1, 1);
 
             srcBuilder.Append(")");
 

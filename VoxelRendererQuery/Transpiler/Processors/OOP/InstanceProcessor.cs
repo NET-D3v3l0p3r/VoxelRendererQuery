@@ -17,7 +17,9 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
     {
         public IEnumerator<NHLSLToken> TokenStream { get; set; }
         public List<IComponent> Components { get; set; }
-        public List<Field> InstanceVariables { get; private set; }
+        public Field InstanceVariable { get; private set; }
+
+        public IMethodContainer InstanceType { get; private set; }
 
         private IMethodContainer _caller;
 
@@ -26,7 +28,6 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
             this._caller = caller;
             this.TokenStream = tokenStream;
             this.Components = new List<IComponent>();
-            this.InstanceVariables = new List<Field>();
         }
 
         public void Run()
@@ -34,8 +35,8 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
             this.TokenStream.MoveNext();
 
             NHLSLToken _typeName = this.TokenStream.Current;
-            OOPClassProcessor _class = OOPHandler.Default().Classes[_typeName.Raw];
-            OOPHandler.Default().CreatePseudoHeap(_class);
+            InstanceType = OOPHandler.Default().Classes[_typeName.Raw];
+            OOPHandler.Default().CreatePseudoHeap((OOPClassProcessor)InstanceType);
             this.TokenStream.MoveNext();
 
             NHLSLToken _variableName = this.TokenStream.Current;
@@ -48,13 +49,13 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
                 Type = _typeName
             };
 
-            InstanceVariables.Add(_field);
+            InstanceVariable = _field;
 
             var _argumentStream = CallHelper.Default().GetAssignmentSpecs(_caller, this.TokenStream, out OOPClassProcessor _instanceType, out AssignmentType _assignmentType);
             switch (_assignmentType)
             {
                 case AssignmentType.INSTANCIATION:
-                    _class.ProcessArgumentStream(_argumentStream);
+                    _instanceType.ProcessArgumentStream(_argumentStream);
                     break;
 
 

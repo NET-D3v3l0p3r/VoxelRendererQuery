@@ -12,58 +12,67 @@ namespace VoxelRendererQuery.Transpiler.Tokenizer
         [Flags]
         public enum Token : long
         {
-            SRC_BEGIN = 1 << 0,
-            STRUCT = 1 << 1,
-            STRING = 1 << 2,
-            BRACKET_O = 1 << 3,
-            BRACKET_C = 1 << 4,
-            COLON = 1 << 5,
-            SEMICOLON = 1 << 6,
+            SRC_BEGIN = 1L << 0,
+            STRUCT = 1L << 1,
+            STRING = 1L << 2,
+            BRACKET_O = 1L << 3,
+            BRACKET_C = 1L << 4,
+            COLON = 1L << 5,
+            SEMICOLON = 1L << 6,
 
-            INTRINSICS_RAY = 1 << 7,
-            INTRINSICS_NSRAYARRAYCHECK = 1 << 8,
-            
-            INTRINSICS_SET_RAY_ORIGIN = 1 << 9,
-            INTRINSICS_SET_RAY_DIRECTION = 1 << 10,
-            INTRINSICS_CREATE_RAY = 1 << 11,
-            INTRINSICS_DEFAULT = 1 << 12,
+            INTRINSICS_RAY = 1L << 7,
+            INTRINSICS_NSRAYARRAYCHECK = 1L << 8,
 
-            BRACE_O = 1 << 13,
-            BRACE_C = 1 << 14,
+            INTRINSICS_SET_RAY_ORIGIN = 1L << 9,
+            INTRINSICS_SET_RAY_DIRECTION = 1L << 10,
+            INTRINSICS_CREATE_RAY = 1L << 11,
+            INTRINSICS_DEFAULT = 1L << 12,
+
+            BRACE_O = 1L << 13,
+            BRACE_C = 1L << 14,
 
 
-            COMMA = 1 << 15,
+            COMMA = 1L << 15,
 
-            TGENERIC_O = 1 << 16,
-            TGENERIC_C = 1 << 17,
+            TGENERIC_O = 1L << 16,
+            TGENERIC_C = 1L << 17,
 
-            VOXELPROGRAM = 1 << 18,
-            VOXELPASS = 1 << 19,
+            VOXELPROGRAM = 1L << 18,
+            VOXELPASS = 1L << 19,
 
-            PROGRAM_ROUTINE = 1 << 20,
-            ENTRY_POINT = 1 << 21,
-            VOXEL_SHADER = 1 << 22,
-            RAY_GEN = 1 << 23,
+            PROGRAM_ROUTINE = 1L << 20,
+            ENTRY_POINT = 1L << 21,
+            VOXEL_SHADER = 1L << 22,
+            RAY_GEN = 1L << 23,
 
-            TRANSPILE = 1 << 24,
+            TRANSPILE = 1L << 24,
 
-            FORBIDDEN = 1 << 25,
+            FORBIDDEN = 1L << 25,
 
-            QUOTES = 1 << 26,
+            QUOTES = 1L << 26,
 
 
             // OOP
 
-            OOP_MODIFIER = 1 << 27,
-            OOP_MODIFIER_PRIVATE = 1 << 28,
-            OOP_MODIFIER_PUBLIC = 1 << 29,
-            
-            OOP_OVERRIDE = 1 << 30,
+            OOP_MODIFIER = 1L << 27,
+            OOP_MODIFIER_PRIVATE = 1L << 28,
+            OOP_MODIFIER_PUBLIC = 1L << 29,
 
-            OOP_CLASS = 1 << 31,
-            OOP_POINTER = 1 << 32,
-            
-            OOP_KEYWORD_NEW = 1 << 33
+            OOP_OVERRIDE = 1L << 30,
+
+            OOP_CLASS = 1L << 31,
+            OOP_POINTER = 1L << 32,
+
+            OOP_KEYWORD_NEW = 1L << 33,
+
+            POINTER_ARROW = 1L << 34,
+
+            SQ_BRACKET_O = 1L << 35,
+            SQ_BRACKET_C = 1L << 36,
+
+            EQUALS = 1L << 37,
+
+            DOT = 1L << 38
         }
 
         private static Dictionary<string, Token> _STR_TOKEN_MAPPER = new Dictionary<string, Token>()
@@ -123,7 +132,16 @@ namespace VoxelRendererQuery.Transpiler.Tokenizer
             { "private", Token.OOP_MODIFIER_PRIVATE | Token.OOP_MODIFIER },
             { "new", Token.OOP_KEYWORD_NEW },
 
-            { "override", Token.OOP_OVERRIDE }
+            { "override", Token.OOP_OVERRIDE },
+
+            { "->", Token.POINTER_ARROW },
+
+            { "[", Token.SQ_BRACKET_O},
+            { "]", Token.SQ_BRACKET_C},
+
+            { "=", Token.EQUALS },
+
+            { ".", Token.DOT }
         };
 
 
@@ -165,13 +183,14 @@ namespace VoxelRendererQuery.Transpiler.Tokenizer
 
                 if (_STR_TOKEN_MAPPER.ContainsKey(_specialAccumulator) && _specialAccumulator.Length > 1)
                 {
-                    yield return new NHLSLToken()
-                    {
-                        Row = row,
-                        Col = col,
-                        Identifier = _STR_TOKEN_MAPPER.ContainsKey(_conventionalAccumulator) ? _STR_TOKEN_MAPPER[_conventionalAccumulator] : Token.STRING,
-                        Raw = _conventionalAccumulator
-                    };
+                    if (_conventionalAccumulator.Length > 0)
+                        yield return new NHLSLToken()
+                        {
+                            Row = row,
+                            Col = col,
+                            Identifier = _STR_TOKEN_MAPPER.ContainsKey(_conventionalAccumulator) ? _STR_TOKEN_MAPPER[_conventionalAccumulator] : Token.STRING,
+                            Raw = _conventionalAccumulator
+                        };
 
                     yield return new NHLSLToken()
                     {

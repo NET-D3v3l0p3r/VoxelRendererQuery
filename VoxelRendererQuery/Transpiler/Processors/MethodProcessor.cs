@@ -15,7 +15,7 @@ namespace VoxelRendererQuery.Transpiler.Processors
 {
     internal class MethodProcessor : IComponent, IProcessor
     {
-        public IMethodContainer Caller { get; private set; }
+
         public string Name { get; set; }
         public List<NHLSLToken> Type { get; set; }
 
@@ -28,16 +28,15 @@ namespace VoxelRendererQuery.Transpiler.Processors
 
         public ParametersProcessor MethodParameters { get; private set; }
 
-
+        private IMethodContainer _caller;
         private IntrinsicsHelper _intrinsicsHelper;
-
 
         // PROCESSORS
         private List<InstanceProcessor> _instanceProcessors = new List<InstanceProcessor>();
 
         public MethodProcessor(IMethodContainer caller, IEnumerator<NHLSLToken> tokenStream)
         {
-            this.Caller = caller;
+            this._caller = caller;
             this.TokenStream = tokenStream;
             this.TokenStream.MoveNext();
 
@@ -59,6 +58,8 @@ namespace VoxelRendererQuery.Transpiler.Processors
 
             int _bracketCounter = 0;
 
+            Stack<NHLSLToken> _tokenStack = new Stack<NHLSLToken>();
+
             while (TokenStream.MoveNext())
             {
                 NHLSLToken token = TokenStream.Current;
@@ -78,18 +79,54 @@ namespace VoxelRendererQuery.Transpiler.Processors
                     continue;
                 }
 
-                if(token.Identifier == NHLSLTokenizer.Token.OOP_POINTER)
+                //if (token.Identifier == NHLSLTokenizer.Token.SQ_BRACKET_O)
+                //{
+                //    while (TokenStream.MoveNext() && TokenStream.Current.Identifier != NHLSLTokenizer.Token.SEMICOLON)
+                //    {
+                //        Console.WriteLine(TokenStream.Current);
+                //    }
+
+                //    Console.ForegroundColor = ConsoleColor.Red;
+                //    Console.WriteLine("NOT IMPLEMENTED YET -- WARNING");
+                //    Console.ForegroundColor = ConsoleColor.Gray;
+
+                //    continue;
+                //}
+
+                if (token.Identifier == NHLSLTokenizer.Token.EQUALS)
                 {
-                    InstanceProcessor _instanceProcessor = new InstanceProcessor(this.Caller, this.TokenStream);
-                    _instanceProcessor.Run();
+                    Components.Add(token); //  ADD EQ TO COMPONENTS
+                    TokenStream.MoveNext();
 
-                    this.Components.Add(_instanceProcessor);
-                    _instanceProcessors.Add(_instanceProcessor);
+                    token = TokenStream.Current;
 
-                    continue;
+                    if (_intrinsicsHelper.Actions.ContainsKey(token.Identifier))
+                    {
+                        _intrinsicsHelper.Actions[token.Identifier]();
+                        continue;
+                    }
+                    else if (token.Identifier == NHLSLTokenizer.Token.OOP_KEYWORD_NEW)
+                    {
+
+                    }
+                    else if (token.Identifier == NHLSLTokenizer.Token.STRING) // CHECK FOR FUNCTION CALL
+                    {
+                        Queue<NHLSLToken> _callQueue = new Queue<NHLSLToken>();
+                        _callQueue.Enqueue(token);
+
+
+                        // a.x.y.z.f();
+
+                        while (TokenStream.MoveNext() && TokenStream.Current.Identifier != NHLSLTokenizer.Token.BRACE_O)
+                        {
+                            _callQueue.Enqueue(TokenStream.Current);
+                        }
+                    }
                 }
 
                 Components.Add(token);
+                _tokenStack.Push(token);
+
                 if (_bracketCounter == 0)
                     break;
             }
@@ -109,12 +146,23 @@ namespace VoxelRendererQuery.Transpiler.Processors
 
             srcBuilder.Append(Name + " ");
 
+            bool _hasMultiplier = false;
             foreach(var component in Components)
             {
                 if (component is NHLSLToken)
                 {
                     var token = (NHLSLToken)component;
+
+                    if (token.Identifier == NHLSLTokenizer.Token.EQUALS && _hasMultiplier)
+                        srcBuilder.Remove(srcBuilder.Length - 1, 1);
+
+                    _hasMultiplier = false;
+
                     srcBuilder.Append(token.Raw + " ");
+
+                    if (token.Raw.Equals("*"))
+                        _hasMultiplier = true;
+
                     if (token.Identifier == NHLSLTokenizer.Token.BRACKET_O || token.Identifier == NHLSLTokenizer.Token.BRACKET_C)
                         srcBuilder.AppendLine();
                     if (token.Identifier == NHLSLTokenizer.Token.SEMICOLON)

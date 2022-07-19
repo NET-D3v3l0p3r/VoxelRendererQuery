@@ -30,6 +30,34 @@ namespace VoxelRendererQuery.Transpiler.Processors.Helper
             ERROR
         }
 
+        public MethodProcessor GetAppropiateSignaure(List<MethodProcessor> methods, List<ArgumentProcessor> arguments)
+        {
+            MethodProcessor _correct = null;
+
+            List<MethodProcessor> _comparisionGroup = methods.FindAll(p => p.MethodParameters.Parameters.Count == arguments.Count);
+            foreach (var _currentMethod in _comparisionGroup)
+            {
+                _correct = _currentMethod;
+                for (int i = 0; i < _currentMethod.MethodParameters.Parameters.Count; i++)
+                {
+                    var _param = _currentMethod.MethodParameters.Parameters[i];
+                    if (!_param.Type[0].Raw.Equals(arguments[i].SpecificType))
+                    {
+                        _correct = null;
+                        break;
+                    }
+                }
+
+                if (_correct != null)
+                    break;
+
+            }
+
+
+            return _correct;
+
+        }
+
         public List<ArgumentProcessor> GetAssignmentSpecs(IMethodContainer caller, IEnumerator<NHLSLToken> tokenStream, out OOPClassProcessor instanceType, out AssignmentType assignmentType)
         {
             instanceType = null;
@@ -54,6 +82,7 @@ namespace VoxelRendererQuery.Transpiler.Processors.Helper
                     // TODO: CONSTRUCTOR
                     if (tokenStream.Current.Identifier != NHLSLTokenizer.Token.BRACE_C)
                     {
+                        #region Handle NEW Keyword/TODO: Move to seperate method
                         OOPClassProcessor _class = OOPHandler.Default().Classes[_instanceType.Raw];
 
                         List<NHLSLToken> _currentArgumentTokens = new List<NHLSLToken>();
@@ -102,6 +131,11 @@ namespace VoxelRendererQuery.Transpiler.Processors.Helper
                         _argumentProcessor.Run();
                         _args.Add(_argumentProcessor);
 
+                        #endregion
+                    }
+                    else 
+                    {
+                        // Check constructor of instanceType
                     }
                 }
                 else

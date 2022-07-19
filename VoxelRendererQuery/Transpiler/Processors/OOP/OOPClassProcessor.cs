@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using VoxelRendererQuery.Includes;
 using VoxelRendererQuery.Includes.InternalStructs;
 using VoxelRendererQuery.Transpiler.Meta;
+using VoxelRendererQuery.Transpiler.Processors.Helper;
 using VoxelRendererQuery.Transpiler.Tokenizer;
 
 namespace VoxelRendererQuery.Transpiler.Processors.OOP
@@ -323,8 +324,11 @@ namespace VoxelRendererQuery.Transpiler.Processors.OOP
         public void ProcessArgumentStream(List<ArgumentProcessor> arguments)
         {
             int _argc = arguments.Count;
-            List<MethodProcessor> _ctors = Constructors.FindAll(p => p.MethodParameters.Parameters.Count == _argc);
+            var _appropiateCtor = CallHelper.Default().GetAppropiateSignaure(Constructors, arguments);
 
+            if(_appropiateCtor == null)
+                throw new Exception("Compiler error: The constructor arguments don't correspond to a constructor of " + this.Name);
+            
  
             
 

@@ -95,6 +95,7 @@ namespace VoxelRendererQuery.Raytracer
             var tokens = NHLSLTokenizer.Default().Run(RTvoXelSource);
 
             NHLSLTranspiler transpiler = new NHLSLTranspiler(tokens.GetEnumerator());
+            transpiler.Run();
             var intermediateSource = transpiler.Transpile();
 
             final_src = final_src
@@ -119,9 +120,11 @@ namespace VoxelRendererQuery.Raytracer
             processStartInfo.Arguments = '"' + Path.GetTempPath() + "nsrtxshdr.dat" + '"' + " " + '"' + Path.GetTempPath() + "nsrtxshdr.byte" + '"' + " /Profile:" + profile.ToString();
             processStartInfo.CreateNoWindow = true;
             processStartInfo.RedirectStandardOutput = true;
+            processStartInfo.RedirectStandardError = true;
 
             compilerProcess.StartInfo = processStartInfo;
-
+            
+            
             compilerProcess.Start();
             compilerProcess.WaitForExit();
 
@@ -143,7 +146,7 @@ namespace VoxelRendererQuery.Raytracer
             catch
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Error compiling.");
+                Console.WriteLine("Error compiling: " + compilerProcess.StandardError.ReadToEnd());
                 Console.ForegroundColor = ConsoleColor.Gray;
             }
         }
