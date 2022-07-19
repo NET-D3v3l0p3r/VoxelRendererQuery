@@ -141,7 +141,7 @@ namespace VoxelRendererQuery.Transpiler.Tokenizer
 
             { "=", Token.EQUALS },
 
-            { ".", Token.DOT }
+            //{ ".", Token.DOT }
         };
 
 

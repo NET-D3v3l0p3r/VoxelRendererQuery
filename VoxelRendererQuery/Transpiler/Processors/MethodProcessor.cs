@@ -93,36 +93,36 @@ namespace VoxelRendererQuery.Transpiler.Processors
                 //    continue;
                 //}
 
-                if (token.Identifier == NHLSLTokenizer.Token.EQUALS)
-                {
-                    Components.Add(token); //  ADD EQ TO COMPONENTS
-                    TokenStream.MoveNext();
+                //if (token.Identifier == NHLSLTokenizer.Token.EQUALS)
+                //{
+                //    Components.Add(token); //  ADD EQ TO COMPONENTS
+                //    TokenStream.MoveNext();
 
-                    token = TokenStream.Current;
+                //    token = TokenStream.Current;
 
-                    if (_intrinsicsHelper.Actions.ContainsKey(token.Identifier))
-                    {
-                        _intrinsicsHelper.Actions[token.Identifier]();
-                        continue;
-                    }
-                    else if (token.Identifier == NHLSLTokenizer.Token.OOP_KEYWORD_NEW)
-                    {
+                //    if (_intrinsicsHelper.Actions.ContainsKey(token.Identifier))
+                //    {
+                //        _intrinsicsHelper.Actions[token.Identifier]();
+                //        continue;
+                //    }
+                //    else if (token.Identifier == NHLSLTokenizer.Token.OOP_KEYWORD_NEW)
+                //    {
 
-                    }
-                    else if (token.Identifier == NHLSLTokenizer.Token.STRING) // CHECK FOR FUNCTION CALL
-                    {
-                        Queue<NHLSLToken> _callQueue = new Queue<NHLSLToken>();
-                        _callQueue.Enqueue(token);
+                //    }
+                //    else if (token.Identifier == NHLSLTokenizer.Token.STRING) // CHECK FOR FUNCTION CALL
+                //    {
+                //        Queue<NHLSLToken> _callQueue = new Queue<NHLSLToken>();
+                //        _callQueue.Enqueue(token);
 
 
-                        // a.x.y.z.f();
+                //        // a.x.y.z.f();
 
-                        while (TokenStream.MoveNext() && TokenStream.Current.Identifier != NHLSLTokenizer.Token.BRACE_O)
-                        {
-                            _callQueue.Enqueue(TokenStream.Current);
-                        }
-                    }
-                }
+                //        while (TokenStream.MoveNext() && TokenStream.Current.Identifier != NHLSLTokenizer.Token.BRACE_O)
+                //        {
+                //            _callQueue.Enqueue(TokenStream.Current);
+                //        }
+                //    }
+                //}
 
                 Components.Add(token);
                 _tokenStack.Push(token);
