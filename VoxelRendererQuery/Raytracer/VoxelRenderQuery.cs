@@ -23,16 +23,20 @@ namespace VoxelRendererQuery.Raytracer
     /// <typeparam name="T"></typeparam>
     public class VoxelRenderQuery<T>
     {
-        public GraphicsDevice GraphicsDevice { get; private set; }
-        internal HLSLStructMapper<T> _structMapper { get; private set; }
+        private bool _dirty;
+
+        private Vector4[] _positionLookUps;
+        private Texture2D _positionLookUp;
 
         private Effect _raytracer;
-        private List<Texture3D> _gpuVoxelData;
-
         private Texture2D _backbuffer;
-
-
         private VoxelVolume3D<T> _volume;
+
+        internal HLSLStructMapper<T> StructMapper { get; private set; }
+
+
+        public GraphicsDevice GraphicsDevice { get; private set; }
+   
         /// <summary>
         /// Volume to render.
         /// </summary>
@@ -49,19 +53,11 @@ namespace VoxelRendererQuery.Raytracer
 
         public EffectParameterCollection Parameters { get { return _raytracer.Parameters; } } // risky
 
-
-        private bool _dirty;
-        
-        private Vector4[] _positionLookUps;
-        private Texture2D _positionLookUp;
-
-
         public VoxelRenderQuery(GraphicsDevice graphicsDevice)
         {
             this.GraphicsDevice = graphicsDevice;
 
-            _structMapper = new HLSLStructMapper<T>();
-            _gpuVoxelData = new List<Texture3D>();
+            StructMapper = new HLSLStructMapper<T>();
 
             _backbuffer = new Texture2D(
                 GraphicsDevice,
@@ -76,8 +72,8 @@ namespace VoxelRendererQuery.Raytracer
 
             _dirty = true;
 
-             _positionLookUps = new Vector4[]
-            {
+            _positionLookUps = new Vector4[]
+               {
                 new Vector4(0, 0, 0, 1),
                 new Vector4(1, 0, 0, 1),
                 new Vector4(0, 0, 1, 1),
@@ -88,7 +84,7 @@ namespace VoxelRendererQuery.Raytracer
                 new Vector4(1, 1, 0, 1),
                 new Vector4(0, 1, 1, 1),
                 new Vector4(1, 1, 1, 1),
-            };
+               };
 
             _positionLookUp = new Texture2D(this.GraphicsDevice, 8, 1, false, SurfaceFormat.Vector4);
             _positionLookUp.SetData<Vector4>(_positionLookUps);
@@ -104,8 +100,8 @@ namespace VoxelRendererQuery.Raytracer
         {
             var hlsl_src = VoxelRendererQuery.Properties.Resources.raytracer;
 
-            var hlsl_struct = _structMapper.GenerateHLSLStruct();
-            var hlsl_conver = _structMapper.GenerateHLSLConverter();
+            var hlsl_struct = StructMapper.GenerateHLSLStruct();
+            var hlsl_conver = StructMapper.GenerateHLSLConverter();
 
             var final_src = new StringBuilder();
             var tokens = NHLSLTokenizer.Default().Run(NHLSLSource);
@@ -118,7 +114,7 @@ namespace VoxelRendererQuery.Raytracer
                 .AppendLine(hlsl_struct)
                 .AppendLine(hlsl_conver)
                 .AppendLine(hlsl_src
-                    .Replace("$$$VOXEL$$$", _structMapper.StructName)
+                    .Replace("$$$VOXEL$$$", StructMapper.StructName)
                     .Replace("$$$RAY_GEN$$$", transpiler.RayGen)
                     .Replace("$$$VOXEL_SHADER$$$", transpiler.VoxelShader)
                     .Replace("$$$ENTRY$$$", transpiler.MainEntry)
@@ -153,8 +149,6 @@ namespace VoxelRendererQuery.Raytracer
 
                 _dirty = false;
             }
-
-
 
 
             _raytracer.Parameters["volumeInitialSize"].SetValue(Volume.Width);

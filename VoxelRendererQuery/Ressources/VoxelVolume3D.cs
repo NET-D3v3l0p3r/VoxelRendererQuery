@@ -64,7 +64,7 @@ namespace VoxelRendererQuery.Ressources
         {
             int[] packedData = new int[data.Length];
             for (int i = 0; i < packedData.Length; i++)
-                packedData[i] = this.VoxelRenderQuery._structMapper.GetInt32(data[i]);
+                packedData[i] = this.VoxelRenderQuery.StructMapper.GetInt32(data[i]);
 
             this.SetData<int>(packedData);
 
