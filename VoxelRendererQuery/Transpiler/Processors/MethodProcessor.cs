@@ -31,9 +31,6 @@ namespace VoxelRendererQuery.Transpiler.Processors
         private IMethodContainer _caller;
         private IntrinsicsHelper _intrinsicsHelper;
 
-        // PROCESSORS
-        private List<InstanceProcessor> _instanceProcessors = new List<InstanceProcessor>();
-
         public MethodProcessor(IMethodContainer caller, IEnumerator<NHLSLToken> tokenStream)
         {
             this._caller = caller;
@@ -78,51 +75,6 @@ namespace VoxelRendererQuery.Transpiler.Processors
                     _intrinsicsHelper.Actions[token.Identifier]();
                     continue;
                 }
-
-                //if (token.Identifier == NHLSLTokenizer.Token.SQ_BRACKET_O)
-                //{
-                //    while (TokenStream.MoveNext() && TokenStream.Current.Identifier != NHLSLTokenizer.Token.SEMICOLON)
-                //    {
-                //        Console.WriteLine(TokenStream.Current);
-                //    }
-
-                //    Console.ForegroundColor = ConsoleColor.Red;
-                //    Console.WriteLine("NOT IMPLEMENTED YET -- WARNING");
-                //    Console.ForegroundColor = ConsoleColor.Gray;
-
-                //    continue;
-                //}
-
-                //if (token.Identifier == NHLSLTokenizer.Token.EQUALS)
-                //{
-                //    Components.Add(token); //  ADD EQ TO COMPONENTS
-                //    TokenStream.MoveNext();
-
-                //    token = TokenStream.Current;
-
-                //    if (_intrinsicsHelper.Actions.ContainsKey(token.Identifier))
-                //    {
-                //        _intrinsicsHelper.Actions[token.Identifier]();
-                //        continue;
-                //    }
-                //    else if (token.Identifier == NHLSLTokenizer.Token.OOP_KEYWORD_NEW)
-                //    {
-
-                //    }
-                //    else if (token.Identifier == NHLSLTokenizer.Token.STRING) // CHECK FOR FUNCTION CALL
-                //    {
-                //        Queue<NHLSLToken> _callQueue = new Queue<NHLSLToken>();
-                //        _callQueue.Enqueue(token);
-
-
-                //        // a.x.y.z.f();
-
-                //        while (TokenStream.MoveNext() && TokenStream.Current.Identifier != NHLSLTokenizer.Token.BRACE_O)
-                //        {
-                //            _callQueue.Enqueue(TokenStream.Current);
-                //        }
-                //    }
-                //}
 
                 Components.Add(token);
                 _tokenStack.Push(token);

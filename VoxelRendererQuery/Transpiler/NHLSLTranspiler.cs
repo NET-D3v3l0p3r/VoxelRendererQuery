@@ -75,29 +75,6 @@ namespace VoxelRendererQuery.Transpiler
                 {
                     _isPointer = true;
                 }
-                //else if (token.Identifier == NHLSLTokenizer.Token.SEMICOLON && Components[Components.Count - 1] is not IProcessor)
-                //{
-
-                //    Field field = new Field();
-
-                //    field.IsPointer = _isPointer;
-                //    field.Name = _tokenStack.Pop();
-                //    field.Type = _tokenStack.Pop();
-                //    if (_tokenStack.Count > 0)
-                //        field.Modifier = _tokenStack.Pop();
-
-                //    Fields.Add(field);
-
-                //    _isPointer = false;
-
-                //    Components.Add(token);
-                //}
-                else if(token.Identifier == NHLSLTokenizer.Token.OOP_CLASS)
-                {
-                    OOPClassProcessor classProcessor = new OOPClassProcessor(TokenStream);
-                    classProcessor.Run();
-                    this.Components.Add(classProcessor);
-                }
                 else if(token.Identifier == NHLSLTokenizer.Token.BRACE_O)
                 {
                     Stack<NHLSLToken> _temp = new Stack<NHLSLToken>();

@@ -129,20 +129,15 @@ namespace VoxelRendererQuery.Transpiler.Tokenizer
             { "checkHit", Token.FORBIDDEN },
             { "arrayRayHit", Token.FORBIDDEN },
             { "RC", Token.FORBIDDEN },
-
-
-            { "$", Token.OOP_POINTER },
-            { "class", Token.OOP_CLASS },
-            { "public", Token.OOP_MODIFIER_PUBLIC | Token.OOP_MODIFIER },
-            { "private", Token.OOP_MODIFIER_PRIVATE | Token.OOP_MODIFIER },
-            { "new", Token.OOP_KEYWORD_NEW },
-
-            { "override", Token.OOP_OVERRIDE },
-
-            { "->", Token.POINTER_ARROW },
-
-            { "[", Token.SQ_BRACKET_O},
-            { "]", Token.SQ_BRACKET_C},
+            { "$", Token.FORBIDDEN },
+            { "class", Token.FORBIDDEN },
+            { "public", Token.FORBIDDEN },
+            { "private", Token.FORBIDDEN },
+            { "new", Token.FORBIDDEN },
+            { "override", Token.FORBIDDEN },
+            { "->", Token.FORBIDDEN },
+            { "[", Token.FORBIDDEN},
+            { "]", Token.FORBIDDEN},
 
             { "=", Token.EQUALS },
 
