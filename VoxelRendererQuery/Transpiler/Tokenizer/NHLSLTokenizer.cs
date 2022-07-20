@@ -116,6 +116,11 @@ namespace VoxelRendererQuery.Transpiler.Tokenizer
             { "\"", Token.FORBIDDEN  }, // unlikely
             { "Ray", Token.FORBIDDEN },
             { "backBuffer", Token.FORBIDDEN },
+            
+            { "RaytracingResult", Token.FORBIDDEN },
+            { "OctreeData", Token.FORBIDDEN },
+            { "InterimOctreeData", Token.FORBIDDEN },
+
             { "voxelDataBuffer", Token.FORBIDDEN },
             { "volumeInitialSize", Token.FORBIDDEN },
             { "getData", Token.FORBIDDEN },

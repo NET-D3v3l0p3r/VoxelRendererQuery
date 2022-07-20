@@ -61,6 +61,40 @@ namespace VoxelRendererQuery.Properties {
         }
         
         /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die struct OctreeEntry
+        ///{
+        ///    int childrenStartIndex;
+        ///    int hasData;
+        ///};
+        ///
+        ///
+        ///
+        ///globallycoherent RWTexture3D&lt;int&gt; voxelDataBuffer;
+        ///globallycoherent RWStructuredBuffer&lt;OctreeEntry&gt; accelerationStructureBuffer;
+        ///
+        ///int volumeInitialSize;
+        ///int maxDepth; // is equivalent to maxIterations
+        ///
+        ///inline int getData(uint3 pixel)
+        ///{
+        ///    return voxelDataBuffer[pixel];
+        ///}
+        ///
+        ///uint calculateRelativeIndex(uint v, uint d)
+        ///{
+        ///    return (uint) (v / (volumeInitialSize &gt;&gt; d));
+        ///}
+        ///
+        ///uint calculateOctant(uint3 pos, uint d)
+        ///{        /// [Rest der Zeichenfolge wurde abgeschnitten]&quot;; ähnelt.
+        /// </summary>
+        internal static string axlr {
+            get {
+                return ResourceManager.GetString("axlr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Sucht eine lokalisierte Zeichenfolge, die uniform int volumeInitialSize;
         ///
         ///uniform RWTexture2D&lt;float4&gt; backBuffer;
@@ -105,7 +139,8 @@ namespace VoxelRendererQuery.Properties {
         /// <summary>
         ///   Sucht eine lokalisierte Zeichenfolge, die $$$RTRCRESULT$$$ $$$VOLUME_RAYTEST$$$(Ray ray)
         ///{
-        ///    float depth = 0;
+        ///	
+        ///	float depth = 0;
         ///    float3 hitPoint = (float3) 0;
         ///    float3 hitPointInt = (float3) 0;
         ///    float3 normal = (float3) 0;
@@ -113,11 +148,14 @@ namespace VoxelRendererQuery.Properties {
         ///    AABB voxelAABBLast = (AABB) 0;
         ///    int voxelData = 0;
         ///    int iterations = 0;
-        ///                        
-        ///    bool result = arrayRayHit(
-        ///                        ray,
-        ///                        createAABB(float3(0, 0, 0), float3(volumeInitialSize, volumeInitialSize, volumeInitialSize)),
-        ///          [Rest der Zeichenfolge wurde abgeschnitten]&quot;; ähnelt.
+        ///	bool result = false;
+        ///	
+        ///	if (useAccelerator)
+        ///	{
+        ///		RaytracingResult rtxrslt = acceleratedVolumeRayTest(ray, 256);
+        ///		depth = rtxrslt.depth;
+        ///		hitPoint = rtxrslt.hitPointF32;
+        ///		hitPointInt = rtxrslt.hitPointI32;        /// [Rest der Zeichenfolge wurde abgeschnitten]&quot;; ähnelt.
         /// </summary>
         internal static string volumeRayTest {
             get {

@@ -9,10 +9,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VoxelRendererQuery.Ressources;
-
+using VoxelRendererQuery.Tools;
 using VoxelRendererQuery.Transpiler;
 using VoxelRendererQuery.Transpiler.Meta;
 using VoxelRendererQuery.Transpiler.Tokenizer;
+using static VoxelRendererQuery.Tools.Toolkit;
 
 namespace VoxelRendererQuery.Raytracer
 {
@@ -20,10 +21,9 @@ namespace VoxelRendererQuery.Raytracer
     /// Raytracer based on https://nbn-resolving.org/urn:nbn:de:bsz:960-opus4-22505
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class RTVoxelQuery<T>
+    public class VoxelRenderQuery<T>
     {
         public GraphicsDevice GraphicsDevice { get; private set; }
-
         internal HLSLStructMapper<T> _structMapper { get; private set; }
 
         private Effect _raytracer;
@@ -31,10 +31,12 @@ namespace VoxelRendererQuery.Raytracer
 
         private Texture2D _backbuffer;
 
+
+        private VoxelVolume3D<T> _volume;
         /// <summary>
         /// Volume to render.
         /// </summary>
-        public VoxelVolume3D<T> Volume { get; set; }
+        public VoxelVolume3D<T> Volume { get { return _volume; } set { _volume = value; _dirty = true; } }
 
         /// <summary>
         /// Default is version 3.8.1.2.
@@ -45,16 +47,21 @@ namespace VoxelRendererQuery.Raytracer
         /// </summary>
         public string NHLSLSource { get; set; }
 
-        public EffectParameterCollection Parameters { get { return _raytracer.Parameters; } }
+        public EffectParameterCollection Parameters { get { return _raytracer.Parameters; } } // risky
 
-        public RTVoxelQuery(GraphicsDevice graphicsDevice, ContentManager content, bool useAccelerator = false)
+
+        private bool _dirty;
+        
+        private Vector4[] _positionLookUps;
+        private Texture2D _positionLookUp;
+
+
+        public VoxelRenderQuery(GraphicsDevice graphicsDevice)
         {
             this.GraphicsDevice = graphicsDevice;
-            this._structMapper = new HLSLStructMapper<T>();
 
-
-            this._gpuVoxelData = new List<Texture3D>();
-
+            _structMapper = new HLSLStructMapper<T>();
+            _gpuVoxelData = new List<Texture3D>();
 
             _backbuffer = new Texture2D(
                 GraphicsDevice,
@@ -67,24 +74,34 @@ namespace VoxelRendererQuery.Raytracer
 
             this.HLSLCompilerPath = @"C:\Users\" + Environment.UserName + @"\.nuget\packages\monogame.content.builder.task.compute\3.8.1.2\tools\net5.0\any\mgfxc.exe";
 
+            _dirty = true;
+
+             _positionLookUps = new Vector4[]
+            {
+                new Vector4(0, 0, 0, 1),
+                new Vector4(1, 0, 0, 1),
+                new Vector4(0, 0, 1, 1),
+                new Vector4(1, 0, 1, 1),
+
+
+                new Vector4(0, 1, 0, 1),
+                new Vector4(1, 1, 0, 1),
+                new Vector4(0, 1, 1, 1),
+                new Vector4(1, 1, 1, 1),
+            };
+
+            _positionLookUp = new Texture2D(this.GraphicsDevice, 8, 1, false, SurfaceFormat.Vector4);
+            _positionLookUp.SetData<Vector4>(_positionLookUps);
+
         }
 
-        public enum CompilerProfile
-        {
-            DirectX_11,
-            OpenGL,
-            PlayStation4,
-            XboxOne,
-            Switch
-        }
 
         /// <summary>
         /// Compile raytracer.
         /// </summary>
-        /// <param name="profile"></param>
-        public void Compile(CompilerProfile profile)
+        /// <param name="compilerProfile"></param>
+        public void Compile(CompilerProfile compilerProfile)
         {
-
             var hlsl_src = VoxelRendererQuery.Properties.Resources.raytracer;
 
             var hlsl_struct = _structMapper.GenerateHLSLStruct();
@@ -110,44 +127,14 @@ namespace VoxelRendererQuery.Raytracer
 
             var totalSource = final_src.ToString();
 
-            Process compilerProcess = new Process();
-            ProcessStartInfo processStartInfo = new ProcessStartInfo();
-            processStartInfo.FileName = HLSLCompilerPath;
+            _raytracer = Toolkit.CompileEffect(
+                GraphicsDevice, 
+                totalSource, 
+                HLSLCompilerPath, 
+                compilerProfile,
+                "NSRaytracer");
 
-            File.WriteAllText(Path.GetTempPath() + "nsrtxshdr.dat", totalSource);
-
-            processStartInfo.Arguments = '"' + Path.GetTempPath() + "nsrtxshdr.dat" + '"' + " " + '"' + Path.GetTempPath() + "nsrtxshdr.byte" + '"' + " /Profile:" + profile.ToString();
-            processStartInfo.CreateNoWindow = true;
-            processStartInfo.RedirectStandardOutput = true;
-            processStartInfo.RedirectStandardError = true;
-
-            compilerProcess.StartInfo = processStartInfo;
-            
-            
-            compilerProcess.Start();
-            compilerProcess.WaitForExit();
-
-            //File.Delete(Path.GetTempPath() + "nsrtxshdr.dat");
-
-            try
-            {             
-                var bytecode = File.ReadAllBytes(Path.GetTempPath() + "nsrtxshdr.byte");
-                _raytracer = new Effect(GraphicsDevice, bytecode);
-
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Compiled.");
-                Console.ForegroundColor = ConsoleColor.Gray;
-
-
-                _raytracer.Parameters["backBuffer"].SetValue(_backbuffer);
-                File.Delete(Path.GetTempPath() + "nsrtxshdr.byte");
-            }
-            catch
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Error compiling: " + compilerProcess.StandardError.ReadToEnd());
-                Console.ForegroundColor = ConsoleColor.Gray;
-            }
+            _raytracer.Parameters["backBuffer"].SetValue(_backbuffer);
         }
 
         /// <summary>
@@ -156,6 +143,20 @@ namespace VoxelRendererQuery.Raytracer
         /// <param name="sbatch"></param>
         public void Draw(SpriteBatch sbatch)
         {
+
+            if (_dirty && Volume.IsAccelerated)
+            {
+                _raytracer.Parameters["nodeMinimumSize"].SetValue((int)Volume.MinimumNodeSize);
+                _raytracer.Parameters["octantVectorLookUp"].SetValue(_positionLookUp);
+                _raytracer.Parameters["accelerationStructureBuffer"].SetValue(Volume.AccelerationBuffer);
+                _raytracer.Parameters["useAccelerator"].SetValue(Volume.IsAccelerated);
+
+                _dirty = false;
+            }
+
+
+
+
             _raytracer.Parameters["volumeInitialSize"].SetValue(Volume.Width);
             _raytracer.Parameters["voxelDataBuffer"].SetValue(Volume);
 
@@ -166,9 +167,7 @@ namespace VoxelRendererQuery.Raytracer
                 (int)MathF.Ceiling(GraphicsDevice.Viewport.Height / 8), 1);
 
 
-            sbatch.Begin();
             sbatch.Draw(_backbuffer, new Vector2(0, 0), Color.White);
-            sbatch.End();
         }
 
 

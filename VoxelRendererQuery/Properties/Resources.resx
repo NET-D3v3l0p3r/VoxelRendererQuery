@@ -117,6 +117,81 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="axlr" xml:space="preserve">
+    <value>struct OctreeEntry
+{
+    int childrenStartIndex;
+    int hasData;
+};
+
+
+
+globallycoherent RWTexture3D&lt;int&gt; voxelDataBuffer;
+globallycoherent RWStructuredBuffer&lt;OctreeEntry&gt; accelerationStructureBuffer;
+
+int volumeInitialSize;
+int maxDepth; // is equivalent to maxIterations
+
+inline int getData(uint3 pixel)
+{
+    return voxelDataBuffer[pixel];
+}
+
+uint calculateRelativeIndex(uint v, uint d)
+{
+    return (uint) (v / (volumeInitialSize &gt;&gt; d));
+}
+
+uint calculateOctant(uint3 pos, uint d)
+{
+    return calculateRelativeIndex(pos.x, d) + calculateRelativeIndex(pos.z, d) * 2 + calculateRelativeIndex(pos.y, d) * 4;
+}
+
+uint calculateRelativeOctant(uint3 pos, uint d)
+{
+    return calculateOctant(pos % (uint) (volumeInitialSize &gt;&gt; (d - 1)), d);
+}
+
+
+void updateOctree(uint3 pos, int value)
+{
+    int relativeIndex = calculateRelativeOctant(pos, 1);
+    accelerationStructureBuffer[0].hasData = 1;
+
+    int nextIndex = relativeIndex + 1;
+
+    for (int depth = 1; depth &lt;= maxDepth; depth++)
+    {
+        OctreeEntry current = accelerationStructureBuffer[nextIndex];
+        
+        //current.hasData += value;
+        InterlockedAdd(accelerationStructureBuffer[nextIndex].hasData, value);
+        
+        accelerationStructureBuffer[nextIndex] = current;
+        
+        relativeIndex = calculateRelativeOctant(pos, depth + 1);
+        nextIndex = current.childrenStartIndex + relativeIndex;
+    }
+}
+
+[numthreads(4, 4, 4)]
+void CS(uint3 globalID : SV_DispatchThreadID)
+{
+    if (getData(globalID) &lt; 1)
+        return;
+    
+    updateOctree(globalID, 1);
+}
+
+
+technique AcceleratorTechnique
+{
+    pass GenerateOctree
+    {
+        ComputeShader = compile cs_5_0 CS();
+    }
+}</value>
+  </data>
   <data name="raytracer" xml:space="preserve">
     <value>uniform int volumeInitialSize;
 
@@ -291,6 +366,230 @@ bool arrayRayHit(in Ray ray,
 
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+uniform int nodeMinimumSize;
+uniform bool useAccelerator;
+
+struct OctreeData
+{
+    int childStartIndex;
+    int childrenCount;
+};
+globallycoherent RWStructuredBuffer&lt;OctreeData&gt; accelerationStructureBuffer;
+uniform Texture2D&lt;float4&gt; octantVectorLookUp;
+
+struct InterimOctreeData
+{
+    OctreeData octreeData;
+    
+    float3 currentPosition;
+    float currentSize;
+   
+    bool hasData;
+    bool isNull;
+};
+
+struct RaytracingResult
+{
+    int voxelDataPayload;
+    
+    float3 hitPointF32;
+    float3 hitPointI32;
+    float3 surfaceNormal;
+    
+    float depth;
+    
+    AABB aabb;
+    
+    int iterations;
+    bool isNull;
+};
+
+
+InterimOctreeData getNode(uint index)
+{
+    InterimOctreeData node = (InterimOctreeData) 0;
+    node.octreeData = accelerationStructureBuffer[index];
+    node.hasData = node.octreeData.childrenCount &gt; 0;
+    
+    return node;
+}
+
+float3 getOctantVector(int index)
+{
+    return octantVectorLookUp[uint2(index, 0)].xyz;
+}
+
+
+RaytracingResult acceleratedVolumeRayTest(Ray ray, int maxIterations)
+{
+    // REGISTERS
+    int skipListPerDepth[5];
+    int parentListPerDepth[5];
+    float3 positionListPerDepth[5];
+    
+    for (int i = 0; i &lt; 5; i++)
+        skipListPerDepth[i] = 0;
+    
+    
+    int depthCounter = 0;
+    
+    // DATASTRUCTURE
+    InterimOctreeData parent = getNode(0);
+    parent.currentPosition = float3(0, 0, 0);
+    parent.currentSize = volumeInitialSize;
+    
+     // RETURN VALUE
+    RaytracingResult finalResult = (RaytracingResult) 0;
+    finalResult.isNull = true;
+    
+    AABB rootVolume = createAABB(parent.currentPosition, float3(1, 1, 1) * parent.currentSize);
+
+    float lambdaMin = 0;
+    float lambdaMax = 0;
+    
+    int3 biggerThanZero = ray.dirRcp &gt; 0;
+    int3 lessThanZero = 1.0f - biggerThanZero;
+    
+    float3 minCorner = lessThanZero * rootVolume.maxSize;
+    float3 maxCorner = biggerThanZero * rootVolume.maxSize;
+    
+    if (checkHit(ray, rootVolume, minCorner, maxCorner, lambdaMin, lambdaMax))
+    {
+        int currentIndex = 0;
+        bool voxelFound = false;
+        
+        int iterations = 0;
+        int additionalIterations = 0;
+        [loop]
+        for (iterations = 0; iterations &lt;= maxIterations; iterations++)
+        {
+            int childStartIndex = parent.octreeData.childStartIndex;
+            
+            InterimOctreeData nextParent = (InterimOctreeData) 0;
+            nextParent.isNull = true;
+            
+            float minDistToNode = 1E10;
+            float minDistToVoxel = 1E10;
+
+            int usedIndex = 0;
+            int nextIndex = 0;
+            
+            for (int i = 0; i &lt; 8; i++)
+            {
+                if (((skipListPerDepth[depthCounter] &gt;&gt; i) &amp; 1))
+                    continue;
+                
+                InterimOctreeData child = getNode(childStartIndex + i);
+                
+                if (!child.hasData)
+                    continue;
+                
+                child.currentSize = parent.currentSize * .5f;
+                child.currentPosition = parent.currentPosition + getOctantVector(i) * child.currentSize;
+                
+                AABB childVoxel = createAABB(child.currentPosition, child.currentSize);
+                    
+                minCorner = lessThanZero * childVoxel.maxSize;
+                maxCorner = biggerThanZero * childVoxel.maxSize;
+                
+                bool result = checkHit(ray, childVoxel, minCorner, maxCorner, lambdaMin, lambdaMax);
+                
+                if (result &amp;&amp; lambdaMin &lt; minDistToNode)
+                {
+                    minDistToNode = lambdaMin;
+                    if (child.currentSize &lt;= nodeMinimumSize)
+                    {
+                        float depth = 0;
+                        float3 hitPoint = (float3) 0;
+                        float3 hitPointInt = (float3) 0;
+                        float3 normal = (float3) 0;
+                        AABB voxelAABB = (AABB) 0;
+						AABB voxelOld = (AABB)0;
+                        int voxelData = 0;
+                        int traversalIterations = 0;
+                        bool result = arrayRayHit(ray, childVoxel, depth, hitPoint, hitPointInt, normal, voxelData, voxelAABB, voxelOld, traversalIterations);
+                        
+                        additionalIterations += traversalIterations;
+                        
+                        if (result)
+                        {
+                            voxelFound = true;
+                            
+                            if (lambdaMin &lt; minDistToVoxel)
+                            {
+                                minDistToVoxel = lambdaMin;
+                                
+                                RaytracingResult result = (RaytracingResult) 0;
+                                result.voxelDataPayload = voxelData;
+                                result.hitPointF32 = hitPoint;
+                                result.hitPointI32 = hitPointInt;
+                                result.surfaceNormal = normal;
+                                result.depth = depth;
+                                result.aabb = voxelAABB;
+                                
+                                result.isNull = false;
+                                finalResult = result;
+                            }
+                            
+                        }
+                        else
+                            minDistToNode = 1E10;
+                    }
+                    else
+                    {
+                        nextParent = child;
+                        nextParent.isNull = false;
+                        usedIndex = i;
+                        nextIndex = childStartIndex + i;
+                    }
+                }
+            }
+            
+            if (voxelFound)
+                break;
+            
+            
+            if (nextParent.isNull)
+            {
+                skipListPerDepth[depthCounter] = 0;
+                
+                depthCounter--;
+                if (depthCounter &lt; 0)
+                    break;
+                
+                int parentIndex = parentListPerDepth[depthCounter];
+                nextIndex = parentIndex;
+                
+                nextParent = getNode(parentIndex);
+                nextParent.currentSize = volumeInitialSize &gt;&gt; depthCounter;
+                nextParent.currentPosition = positionListPerDepth[depthCounter];
+                
+            }
+            else
+            {
+                skipListPerDepth[depthCounter] |= (1 &lt;&lt; usedIndex);
+                positionListPerDepth[depthCounter] = parent.currentPosition;
+                parentListPerDepth[depthCounter] = currentIndex;
+
+                depthCounter++;
+            }
+            
+            parent = nextParent;
+            currentIndex = nextIndex;
+        }
+        
+        iterations += additionalIterations;
+        finalResult.iterations = iterations;
+    }
+    return finalResult;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 $$$__ROUTINE__$$$
@@ -316,7 +615,8 @@ technique VolumeModificationTechnique
   <data name="volumeRayTest" xml:space="preserve">
     <value>$$$RTRCRESULT$$$ $$$VOLUME_RAYTEST$$$(Ray ray)
 {
-    float depth = 0;
+	
+	float depth = 0;
     float3 hitPoint = (float3) 0;
     float3 hitPointInt = (float3) 0;
     float3 normal = (float3) 0;
@@ -324,8 +624,23 @@ technique VolumeModificationTechnique
     AABB voxelAABBLast = (AABB) 0;
     int voxelData = 0;
     int iterations = 0;
-                        
-    bool result = arrayRayHit(
+	bool result = false;
+	
+	if (useAccelerator)
+	{
+		RaytracingResult rtxrslt = acceleratedVolumeRayTest(ray, 256);
+		depth = rtxrslt.depth;
+		hitPoint = rtxrslt.hitPointF32;
+		hitPointInt = rtxrslt.hitPointI32;
+		normal = rtxrslt.surfaceNormal;
+		voxelAABB = rtxrslt.aabb;
+		iterations = rtxrslt.iterations;
+		result = !rtxrslt.isNull;
+		
+	}
+    else 
+	{
+       result = arrayRayHit(
                         ray,
                         createAABB(float3(0, 0, 0), float3(volumeInitialSize, volumeInitialSize, volumeInitialSize)),
                         depth,
@@ -335,7 +650,7 @@ technique VolumeModificationTechnique
                         voxelData,
                         voxelAABB, voxelAABBLast, iterations);
         
-
+	}
 $$$ASSIGNMENT_ROUTINE$$$
     
 }</value>
