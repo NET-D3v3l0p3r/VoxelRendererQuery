@@ -55,12 +55,12 @@ namespace VoxelRendererQuery.Transpiler
             if (TokenStream.Current.Identifier != NHLSLTokenizer.Token.SRC_BEGIN)
                 throw new IllegalSourceException("The source file must start with: bismIllah");
 
-            bool _isPointer = false;
 
             while(TokenStream.MoveNext())
             {
                 NHLSLToken token = TokenStream.Current;
 
+                
                 if (token.Identifier == NHLSLTokenizer.Token.FORBIDDEN)
                     throw new IllegalOverrideException(
                         "The source contains an illegal symbol at line " + token.Col + " and row " + token.Row + ": " + token.Raw);
@@ -70,10 +70,6 @@ namespace VoxelRendererQuery.Transpiler
                     StructProcessor structProcessor = new StructProcessor(TokenStream);
                     structProcessor.Run();
                     this.Components.Add(structProcessor);
-                }
-                else if (token.Identifier == NHLSLTokenizer.Token.OOP_POINTER)
-                {
-                    _isPointer = true;
                 }
                 else if(token.Identifier == NHLSLTokenizer.Token.BRACE_O)
                 {
@@ -98,7 +94,6 @@ namespace VoxelRendererQuery.Transpiler
                     this.Methods.Add(methodProcessor);
 
                     methodProcessor.Name = _temp.Pop().Raw;
-                    methodProcessor.IsPointerType = _isPointer;
 
                     methodProcessor.Run();
 
@@ -154,14 +149,14 @@ namespace VoxelRendererQuery.Transpiler
 
             foreach (var component in Components)
             {
-                if(component is StructProcessor)
+                if (component is StructProcessor)
                 {
                     var strcprcs = (StructProcessor)component;
                     _structProcessors.Add(strcprcs.Name, strcprcs);
 
                     srcBuilder.Append(component.Transpile());
                 }
-                else if(component is MethodProcessor)
+                else if (component is MethodProcessor)
                 {
                     var mthdprcs = (MethodProcessor)component;
                     foreach (var intrinsics in mthdprcs.IntrinsicCalls)
@@ -180,11 +175,20 @@ namespace VoxelRendererQuery.Transpiler
 
                     srcBuilder.Append(component.Transpile());
 
-                }else
+                }
+                else if (component is NHLSLToken)
                 {
-                    srcBuilder.Append(component.Transpile() + " ");
-                    if (component is NHLSLToken && ((NHLSLToken)component).Identifier == NHLSLTokenizer.Token.SEMICOLON)
+                    NHLSLToken token = (NHLSLToken)component;
+
+                    if (token.Identifier == NHLSLTokenizer.Token.SEMICOLON)
+                        srcBuilder.AppendLine(";");
+                    else if (token.Identifier == NHLSLTokenizer.Token.NEWL)
                         srcBuilder.AppendLine();
+                    else if (token.Identifier == NHLSLTokenizer.Token.DEFINE)
+                        srcBuilder.Append("#");
+                    else
+                        srcBuilder.Append(token.Transpile() + " ");
+
                 }
             }
 

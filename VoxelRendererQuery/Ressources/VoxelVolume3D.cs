@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,69 @@ namespace VoxelRendererQuery.Ressources
 
         public VoxelRenderQuery<T> VoxelRenderQuery { get; private set; }
         public bool IsAccelerated { get; private set; }
+
+        private Matrix _rotMat;
+        private Vector3 _rotation;
+        public Vector3 Rotation
+        {
+            get
+            {
+                return _rotation;
+            }
+            set
+            {
+                _rotation = value;
+                
+                float angle = _rotation.Length();
+                if(angle == 0)
+                {
+                    _rotMat = Matrix.Identity;
+                    return;
+                }
+
+                Vector3 normalizedRotationAxis = new Vector3(_rotation.X, _rotation.Y, _rotation.Z);
+                normalizedRotationAxis.Normalize();
+
+                _rotMat = Matrix.CreateFromAxisAngle(normalizedRotationAxis, angle);
+
+                VoxelRenderQuery.Parameters["srMatrix"].SetValue(Matrix.Invert(_scaleMat * _rotMat));
+            }
+        }
+
+        private Matrix _scaleMat;
+        private Vector3 _scale;
+        public Vector3 Scale
+        {
+            get
+            {
+                return _scale;
+            }
+            set
+            {
+                _scale = value;
+                _scaleMat = Matrix.CreateScale(_scale);
+
+                VoxelRenderQuery.Parameters["srMatrix"].SetValue(Matrix.Invert(_scaleMat * _rotMat));
+            }
+        }
+
+        private Matrix _translationMat;
+        private Vector3 _translation;
+
+        public Vector3 Translation
+        {
+            get 
+            {
+                return _translation;
+            }
+
+            set
+            {
+                _translation = value;
+                _translationMat = Matrix.CreateTranslation(-_translation);
+                VoxelRenderQuery.Parameters["translationMatrix"].SetValue(_translationMat);
+            }
+        }
 
         internal StructuredBuffer AccelerationBuffer { get; private set; }
         internal NodeSize MinimumNodeSize { get; private set; }
@@ -58,6 +122,15 @@ namespace VoxelRendererQuery.Ressources
 
                 this.MinimumNodeSize = nodeSize;
             }
+
+
+            _rotMat = Matrix.Identity;
+            _scaleMat = Matrix.Identity;
+            _translationMat = Matrix.Identity;
+
+            Rotation = Vector3.Zero;
+            Scale = new Vector3(1, 1, 1);
+            Translation = Vector3.Zero;
         }
 
         public void SetVoxelData(T[] data)

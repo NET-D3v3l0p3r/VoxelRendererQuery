@@ -193,7 +193,8 @@ technique AcceleratorTechnique
 }</value>
   </data>
   <data name="raytracer" xml:space="preserve">
-    <value>uniform int volumeInitialSize;
+    <value>#define MAX_ITERATION 256
+uniform int volumeInitialSize;
 
 uniform RWTexture2D&lt;float4&gt; backBuffer;
 
@@ -204,7 +205,8 @@ int getData(int3 position)
     return voxelDataBuffer[position];
 }
 
-
+uniform float4x4 srMatrix;
+uniform float4x4 translationMatrix;
 struct Ray
 {
     float3 origin;
@@ -615,7 +617,10 @@ technique VolumeModificationTechnique
   <data name="volumeRayTest" xml:space="preserve">
     <value>$$$RTRCRESULT$$$ $$$VOLUME_RAYTEST$$$(Ray ray)
 {
-	
+	ray.origin = mul(float4(ray.origin, 1), mul(translationMatrix, srMatrix)); 
+                   ray.dir = mul(float4(ray.dir, 0), srMatrix);
+                   ray.dirRcp = rcp(ray.dir);
+
 	float depth = 0;
     float3 hitPoint = (float3) 0;
     float3 hitPointInt = (float3) 0;
@@ -628,7 +633,7 @@ technique VolumeModificationTechnique
 	
 	if (useAccelerator)
 	{
-		RaytracingResult rtxrslt = acceleratedVolumeRayTest(ray, 256);
+		RaytracingResult rtxrslt = acceleratedVolumeRayTest(ray, MAX_ITERATION);
 		depth = rtxrslt.depth;
 		hitPoint = rtxrslt.hitPointF32;
 		hitPointInt = rtxrslt.hitPointI32;

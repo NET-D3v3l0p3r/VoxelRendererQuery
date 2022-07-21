@@ -15,11 +15,9 @@ namespace VoxelRendererQuery.Transpiler.Processors
 {
     internal class MethodProcessor : IComponent, IProcessor
     {
-
         public string Name { get; set; }
         public List<NHLSLToken> Type { get; set; }
 
-        public bool IsPointerType { get; set; }
         public bool IsConstructor { get; set; }
 
         public IEnumerator<NHLSLToken> TokenStream { get; set; }
@@ -40,8 +38,6 @@ namespace VoxelRendererQuery.Transpiler.Processors
             this.Type = new List<NHLSLToken>();
             this.Components = new List<IComponent>();
             this.IntrinsicCalls = new List<Intrinsics>();
-
-            
 
             _intrinsicsHelper = IntrinsicsHelper.New(this);
         }
@@ -88,13 +84,8 @@ namespace VoxelRendererQuery.Transpiler.Processors
         {
             StringBuilder srcBuilder = new StringBuilder();
 
-            if (!IsPointerType)
-                foreach (var type in Type)
-                {
-                    srcBuilder.Append(type.Raw + " ");
-                }
-            else 
-                srcBuilder.Append("int ");
+            foreach (var type in Type)
+                srcBuilder.Append(type.Raw + " ");
 
             srcBuilder.Append(Name + " ");
 

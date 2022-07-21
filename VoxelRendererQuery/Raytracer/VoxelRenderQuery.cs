@@ -36,7 +36,7 @@ namespace VoxelRendererQuery.Raytracer
 
 
         public GraphicsDevice GraphicsDevice { get; private set; }
-   
+
         /// <summary>
         /// Volume to render.
         /// </summary>
@@ -139,7 +139,6 @@ namespace VoxelRendererQuery.Raytracer
         /// <param name="sbatch"></param>
         public void Draw(SpriteBatch sbatch)
         {
-
             if (_dirty && Volume.IsAccelerated)
             {
                 _raytracer.Parameters["nodeMinimumSize"].SetValue((int)Volume.MinimumNodeSize);

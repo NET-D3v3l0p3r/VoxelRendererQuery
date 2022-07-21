@@ -50,6 +50,8 @@ namespace VoxelRendererQuery.Tools
 
             Effect effect = null;
 
+            File.Delete(Path.GetTempPath() + fileName);
+
             try
             {
                 var bytecode = File.ReadAllBytes(Path.GetTempPath() + fileName + ".byte");

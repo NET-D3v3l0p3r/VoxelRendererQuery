@@ -95,7 +95,8 @@ namespace VoxelRendererQuery.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die uniform int volumeInitialSize;
+        ///   Sucht eine lokalisierte Zeichenfolge, die #define MAX_ITERATION 256
+        ///uniform int volumeInitialSize;
         ///
         ///uniform RWTexture2D&lt;float4&gt; backBuffer;
         ///
@@ -106,7 +107,8 @@ namespace VoxelRendererQuery.Properties {
         ///    return voxelDataBuffer[position];
         ///}
         ///
-        ///
+        ///uniform float4x4 srMatrix;
+        ///uniform float4x4 translationMatrix;
         ///struct Ray
         ///{
         ///    float3 origin;
@@ -122,13 +124,7 @@ namespace VoxelRendererQuery.Properties {
         ///};
         ///AABB createAABB(float3 center, float3 max)
         ///{
-        ///    AABB aabb = (AABB) 0;
-        ///    aabb.center = center;
-        ///    aabb.maxSize = max;
-        ///    return aabb;
-        ///}
-        ///
-        ///bool check [Rest der Zeichenfolge wurde abgeschnitten]&quot;; ähnelt.
+        ///    AABB aabb = (AABB) [Rest der Zeichenfolge wurde abgeschnitten]&quot;; ähnelt.
         /// </summary>
         internal static string raytracer {
             get {
@@ -139,7 +135,10 @@ namespace VoxelRendererQuery.Properties {
         /// <summary>
         ///   Sucht eine lokalisierte Zeichenfolge, die $$$RTRCRESULT$$$ $$$VOLUME_RAYTEST$$$(Ray ray)
         ///{
-        ///	
+        ///	ray.origin = mul(float4(ray.origin, 1), mul(translationMatrix, srMatrix)); 
+        ///                   ray.dir = mul(float4(ray.dir, 0), srMatrix);
+        ///                   ray.dirRcp = rcp(ray.dir);
+        ///
         ///	float depth = 0;
         ///    float3 hitPoint = (float3) 0;
         ///    float3 hitPointInt = (float3) 0;
@@ -150,12 +149,7 @@ namespace VoxelRendererQuery.Properties {
         ///    int iterations = 0;
         ///	bool result = false;
         ///	
-        ///	if (useAccelerator)
-        ///	{
-        ///		RaytracingResult rtxrslt = acceleratedVolumeRayTest(ray, 256);
-        ///		depth = rtxrslt.depth;
-        ///		hitPoint = rtxrslt.hitPointF32;
-        ///		hitPointInt = rtxrslt.hitPointI32;        /// [Rest der Zeichenfolge wurde abgeschnitten]&quot;; ähnelt.
+        ///	 [Rest der Zeichenfolge wurde abgeschnitten]&quot;; ähnelt.
         /// </summary>
         internal static string volumeRayTest {
             get {

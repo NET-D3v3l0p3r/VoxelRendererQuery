@@ -72,7 +72,11 @@ namespace VoxelRendererQuery.Transpiler.Tokenizer
 
             EQUALS = 1L << 37,
 
-            DOT = 1L << 38
+            DOT = 1L << 38,
+
+            NEWL = 1L << 39,
+
+            DEFINE = 1L << 40
         }
 
         private static Dictionary<string, Token> _STR_TOKEN_MAPPER = new Dictionary<string, Token>()
@@ -140,6 +144,7 @@ namespace VoxelRendererQuery.Transpiler.Tokenizer
             { "]", Token.FORBIDDEN},
 
             { "=", Token.EQUALS },
+            { "#", Token.DEFINE }
 
             //{ ".", Token.DOT }
         };
@@ -259,6 +264,15 @@ namespace VoxelRendererQuery.Transpiler.Tokenizer
                             Raw = _totalAccumulator
                         };
 
+
+                    if (currentchar == '\r' || currentchar == '\n')
+                        yield return new NHLSLToken()
+                        {
+                            Row = row,
+                            Col = col,
+                            Identifier = Token.NEWL,
+                            Raw = currentchar + ""
+                        };
 
                     _totalAccumulator = "";
                     _conventionalAccumulator = "";
